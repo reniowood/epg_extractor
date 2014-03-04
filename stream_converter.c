@@ -1,13 +1,12 @@
 #include "stream_converter.h"
-#include "packet_analyzer.h"
 
 int sc_convert_stream_to_packet(char filename[]) {
     FILE *TS_file;
 
-    char *TS_packet = NULL;
-    char TS_packet_sync_byte;
+    uint8_t *TS_packet = NULL;
+    uint8_t TS_packet_sync_byte;
 
-    TS_file = fopen(filename, 'r');
+    TS_file = fopen(filename, "r");
 
     if (TS_file == NULL) {
         printf("Opening TS file is failed.\n");
@@ -16,8 +15,9 @@ int sc_convert_stream_to_packet(char filename[]) {
     }
 
     while (!feof(TS_file)) {
-        if (fread(TS_packet_sync_byte, 1, 1, TS_file) == 0x47) {
-            TS_packet = (char *)malloc(TS_PACKET_SIZE);
+        fread(&TS_packet_sync_byte, 1, 1, TS_file);
+        if (TS_packet_sync_byte == 0x47) {
+            TS_packet = (uint8_t *)malloc(TS_PACKET_SIZE);
             TS_packet[0] = TS_packet_sync_byte;
 
             if (fread(TS_packet + 1, TS_PACKET_SIZE - 1, 1, TS_file) == 0)

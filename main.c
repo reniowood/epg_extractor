@@ -19,8 +19,10 @@ int main() {
 
     char TS_filename[MAX_FILENAME_LENGTH], service_name[MAX_SERVICE_NAME_LENGTH], now_time[MAX_TIME_LENGTH];
 
-    elect_menu = 0;
+    select_menu = 0;
     EPG_loaded = 0;
+
+    em_init();
 
     while (1) {
         printf("1. Read TS file\n");
@@ -58,7 +60,7 @@ int main() {
             printf("What time is it now (YYYY-MM-DD-HH-MM): ");
             scanf("%s", now_time);
 
-            em_show_now_EPG(now_time);
+            /* em_show_now_EPG(now_time); */
 
             break;
         case MENU_EXIT:
