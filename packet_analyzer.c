@@ -8,8 +8,7 @@ void pa_analyze_packet(uint8_t *TS_packet) {
 
     /* see PID of packet in the header and check whether the packet is for SDT/EIT or not. */
     PID = *(uint32_t *)TS_packet;
-    PID = (PID >> 8) & ((1 << 13) - 1);
-    printf("PID: %x\n", PID);
+    PID = get_bits(11, 13, TS_packet);
 
     if ((PID == PID_SDT) || (PID == PID_EIT)) {
         adaptation_field_control = *(uint32_t *)TS_packet;

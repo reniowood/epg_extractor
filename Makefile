@@ -1,10 +1,13 @@
-OBJECTS = main.o stream_converter.o packet_analyzer.o section_analyzer.o EPG_manager.o
+OBJECTS = main.o common.o stream_converter.o packet_analyzer.o section_analyzer.o EPG_manager.o
 
 extractor: $(OBJECTS)
-	gcc -o extractor.out main.o stream_converter.o packet_analyzer.o section_analyzer.o EPG_manager.o
+	gcc -o extractor.out $(OBJECTS)
 
-main.o: common.h main.c
+main.o: main.c
 	gcc -c -g main.c
+
+common.o: common.h common.c
+	gcc -c -g common.c
 
 stream_converter.o: stream_converter.h stream_converter.c
 	gcc -c -g stream_converter.c
