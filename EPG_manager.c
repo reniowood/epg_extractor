@@ -10,50 +10,60 @@ void em_init() {
     init_list(service_list);
 }
 
-uint32_t em_get_SDT_version_number(uint32_t table_id) {
+uint32_t em_get_SDT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t table_id) {
     struct list_node *version_number_entry = NULL;
-    struct VersionNumber *version_number = NULL;
+    struct SDTVersionNumber *version_number = NULL;
 
     list_for_each(version_number_entry, SDT_version_number_list) {
-        version_number = get_data(version_number_entry, struct VersionNumber);
+        version_number = get_data(version_number_entry, struct SDTVersionNumber);
 
-        if (version_number->table_id == table_id)
+    if (version_number->original_network_id == original_network_id &&
+        version_number->transport_stream_id == transport_stream_id &&
+        version_number->table_id == table_id)
             return version_number->version_number;
     }
 
     return -1;
 }
 
-uint32_t em_get_EIT_version_number(uint32_t table_id) {
+uint32_t em_get_EIT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t table_id) {
     struct list_node *version_number_entry = NULL;
-    struct VersionNumber *version_number = NULL;
+    struct EITVersionNumber *version_number = NULL;
 
     list_for_each(version_number_entry, EIT_version_number_list) {
-        version_number = get_data(version_number_entry, struct VersionNumber);
+        version_number = get_data(version_number_entry, struct EITVersionNumber);
 
-        if (version_number->table_id == table_id)
+    if (version_number->original_network_id == original_network_id &&
+        version_number->transport_stream_id == transport_stream_id &&
+        version_number->service_id == service_id &&
+        version_number->table_id == table_id)
             return version_number->version_number;
     }
 
     return -1;
 }
 
-void em_set_SDT_version_number(uint32_t table_id, uint32_t version_number) {
-    struct VersionNumber *new_version_number = NULL;
+void em_set_SDT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t table_id, uint32_t version_number) {
+    struct SDTVersionNumber *new_version_number = NULL;
 
-    new_version_number = (struct VersionNumber *)malloc(sizeof(struct VersionNumber));
+    new_version_number = (struct SDTVersionNumber *)malloc(sizeof(struct SDTVersionNumber));
 
+    new_version_number->original_network_id = original_network_id;
+    new_version_number->transport_stream_id = transport_stream_id;
     new_version_number->table_id = table_id;
     new_version_number->version_number = version_number;
 
     add_data_tail(new_version_number, SDT_version_number_list);
 }
 
-void em_set_EIT_version_number(uint32_t table_id, uint32_t version_number) {
-    struct VersionNumber *new_version_number;
+void em_set_EIT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t table_id, uint32_t version_number) {
+    struct EITVersionNumber *new_version_number;
 
-    new_version_number = (struct VersionNumber *)malloc(sizeof(struct VersionNumber));
+    new_version_number = (struct EITVersionNumber *)malloc(sizeof(struct EITVersionNumber));
 
+    new_version_number->original_network_id = original_network_id;
+    new_version_number->transport_stream_id = transport_stream_id;
+    new_version_number->service_id = service_id;
     new_version_number->table_id = table_id;
     new_version_number->version_number = version_number;
 
@@ -233,7 +243,7 @@ void em_show_whole_EPG() {
         list_for_each(event_entry, event_list) {
             event = get_data(event_entry, struct Event);
 
-            printf("%d: %ld(%d) %s - %s\n", event->event_id, event->start_time, event->duration, event->event_name, event->event_description);
+            printf("%d: %012lx(%06x) %s - %s\n", event->event_id, event->start_time, event->duration, event->event_name, event->event_description);
         }
 
         putchar('\n');

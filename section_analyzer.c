@@ -37,16 +37,14 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
     version_number = get_bits(42, 5, section);
     /* printf("version_number: 0x%x\n", version_number); */
 
-    /*
-    table_version_number = em_get_SDT_version_number(table_id);
+    transport_stream_id = get_bits(24, 16, section);
+    original_network_id = get_bits(64, 16, section);
+
+    table_version_number = em_get_SDT_version_number(original_network_id, transport_stream_id, table_id);
     if (table_version_number != (uint32_t)-1 && table_version_number != (version_number + 1) % 32)
         return;
     else
-        em_set_SDT_version_number(table_id, version_number);
-    */
-
-    transport_stream_id = get_bits(24, 16, section);
-    original_network_id = get_bits(64, 16, section);
+        em_set_SDT_version_number(original_network_id, transport_stream_id, table_id, version_number);
 
     section += 11;
     section_bytes_scaned = 11;
@@ -115,17 +113,15 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
     version_number = get_bits(42, 5, section);
     /* printf("version_number: 0x%x\n", version_number); */
 
-    /*
-    table_version_number = em_get_EIT_version_number(table_id);
-    if (table_version_number != (uint32_t)-1 && table_version_number != (version_number + 1) % 32)
-        return;
-    else
-        em_set_EIT_version_number(table_id, version_number);
-    */
-
     service_id = get_bits(24, 16, section);
     transport_stream_id = get_bits(64, 16, section);
     original_network_id = get_bits(80, 16, section);
+
+    table_version_number = em_get_EIT_version_number(original_network_id, transport_stream_id, service_id, table_id);
+    if (table_version_number != (uint32_t)-1 && table_version_number != (version_number + 1) % 32)
+        return;
+    else
+        em_set_EIT_version_number(original_network_id, transport_stream_id, service_id, table_id, version_number);
 
     section += 14;
     section_bytes_scaned = 14;
