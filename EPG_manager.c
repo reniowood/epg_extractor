@@ -232,6 +232,8 @@ void em_show_whole_EPG() {
     struct Service *service;
     struct Event *event;
 
+    int i;
+
     service = NULL;
     event = NULL;
     list_for_each(service_entry, service_list) {
@@ -243,7 +245,10 @@ void em_show_whole_EPG() {
         list_for_each(event_entry, event_list) {
             event = get_data(event_entry, struct Event);
 
-            printf("%d: %012lx(%06x) %s - %s\n", event->event_id, event->start_time, event->duration, event->event_name, event->event_description);
+            printf("(%d, %d, %d, %d): ", event->original_network_id, event->transport_stream_id, event->event_id, event->event_id);
+            printf("%02x:%02x:%02x", (event->start_time >> 16) & 0xff, (event->start_time >> 4) & 0xff, (event->start_time) & 0xff);
+            printf("(%02x:%02x:%02x) ", (event->duration >> 16) & 0xff, (event->duration >> 4) & 0xff, (event->duration) & 0xff);
+            printf("%s - %s\n", event->event_name, event->event_description);
         }
 
         putchar('\n');
