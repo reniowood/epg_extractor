@@ -13,9 +13,9 @@ struct list_node {
                                                         (list_head)->prev = &(data->node); \
                                                     } else { \
                                                         data->node.next = (list_head); \
-                                                        data->node.prev = (list_head)->prev; \
+                                                        data->node.prev = (list_head); \
+                                                        (list_head)->prev->next = &(data->node); \
                                                         (list_head)->prev = &(data->node); \
-                                                        (list_head)->next = &(data->node); \
                                                     }
 #define list_for_each(entry, list_head)         for ((entry)=(list_head)->next; (entry)!=(list_head); (entry)=(entry)->next)
 #define get_data(entry, type)                   (type *)((char *)entry - (sizeof(type) - sizeof(struct list_node)));

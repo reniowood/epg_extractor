@@ -1,65 +1,85 @@
 #include "packet_analyzer.h"
 
 void pa_analyze_packet(uint8_t *TS_packet) {
-    static uint32_t PID;
+    static uint32_t old_PID, PID;
     uint32_t adaptation_field_control, adaptation_field_length, payload_index, payload_unit_start_indicator, pointer_field;
     static uint32_t section_length = 0, section_filled_length = 0;
     static uint8_t *section = NULL;
 
     /* see PID of packet in the header and check whether the packet is for SDT/EIT or not. */
-    PID = *(uint32_t *)TS_packet;
     PID = get_bits(11, 13, TS_packet);
 
     if ((PID == PID_SDT) || (PID == PID_EIT)) {
-        adaptation_field_control = *(uint32_t *)TS_packet;
-        adaptation_field_control = (adaptation_field_control >> 4) & 0x02;
-        if (adaptation_field_control == 1) /* no adaptation field */
+        /*
+        if (PID == PID_SDT)
+            printf("SDT packet\n");
+        else
+            printf("EIT packet\n");
+        */
+
+        adaptation_field_control = get_bits(26, 2, TS_packet);
+        /* printf("adaptation_field_control: %d\n", adaptation_field_control); */
+        if (adaptation_field_control == 1) { /* no adaptation field */
             payload_index = 0;
-        else if (adaptation_field_control == 3) {
-            adaptation_field_length = *((uint32_t *)TS_packet + 1);
-            adaptation_field_length = (adaptation_field_length >> 24) & 0xff;
+        } else if (adaptation_field_control == 3) {
+            adaptation_field_length = get_bits(32, 8, TS_packet);
             payload_index = 1 + adaptation_field_length;
+        } else {
+            return;
         }
 
-        payload_unit_start_indicator = *(uint32_t *)TS_packet;
-        payload_unit_start_indicator = (payload_unit_start_indicator >> 22) & 0x1;
+        payload_unit_start_indicator = get_bits(9, 1, TS_packet);
+        /* printf("payload_unit_start_indicator: %d\n", payload_unit_start_indicator); */
 
         /* payload_unit_start_indicator == 1; at least one section begins in a given TS packet */
         if (payload_unit_start_indicator == 1) {
-            pointer_field = *((uint32_t *)TS_packet + 1 + payload_index);
-            pointer_field = (pointer_field >> 24) & 0xff;
+            pointer_field = get_bits(32 + payload_index * 8, 8, TS_packet);
+
+            /* printf("pointer_field: %d\n", pointer_field); */
+
+            memcpy(section + section_filled_length, TS_packet + payload_index, pointer_field);
+            payload_index += pointer_field;
             payload_index++;
 
-            if (pointer_field == 0) {
-                section_length = *((uint32_t *)TS_packet + 1 + payload_index);
-                section_length = (section_length >> 8) & 0x0fff;
-                section_length += 3; /* add length until section_length field */
-
-                section = (uint8_t *)malloc(section_length);
-                memcpy(section, TS_packet + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
-
-                section_filled_length = TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
-            } else {
-                memcpy(section + section_filled_length, TS_packet + payload_index, pointer_field);
-                payload_index += pointer_field;
-
-                if (PID == PID_SDT) {
+            if (section != NULL) {
+                if (old_PID == PID_SDT) {
                     sa_analyze_SDT_section(section, section_length);
                 } else { /* PID_EIT */
                     sa_analyze_EIT_section(section, section_length);
                 }
+            }
 
-                section_length = *((uint32_t *)TS_packet + 1 + payload_index);
-                section_length = (section_length >> 8) & 0x0fff;
+            old_PID = PID;
+
+            if (pointer_field == 0) {
+                section_length = get_bits(32 + payload_index * 8 + 12, 12, TS_packet);
                 section_length += 3; /* add length until section_length field */
 
                 section = (uint8_t *)malloc(section_length);
-                memcpy(section, TS_packet + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
+                if (section_length >= TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index)
+                    memcpy(section, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
+                else
+                    memcpy(section, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, section_length);
+
+                section_filled_length = TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
+            } else {
+                section_length = get_bits(32 + payload_index * 8 + 12, 12, TS_packet);
+                section_length += 3; /* add length until section_length field */
+
+                section = (uint8_t *)malloc(section_length);
+                memcpy(section, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
 
                 section_filled_length = TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
             }
         } else { /* payload_unit_start_indicator == 0; there is no section begins in a given TS packet */
-            memcpy(section + section_filled_length, TS_packet + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
+            if (section == NULL)
+                return;
+
+            if (section_length - section_filled_length >= TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index)
+                memcpy(section + section_filled_length, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
+            else
+                memcpy(section + section_filled_length, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, section_length - section_filled_length);
+
             section_filled_length += TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
         }
     }

@@ -1,10 +1,11 @@
 #include "common.h"
 
-uint32_t get_bits(uint8_t start, uint8_t size, uint8_t *data) {
+uint64_t get_bits(uint8_t start, uint8_t size, uint8_t *data) {
     uint8_t end = start + size - 1;
     uint8_t start_byte = start / 8, end_byte = end / 8;
     uint8_t bit_index, byte_index;
-    uint32_t bits, temp;
+    uint8_t temp;
+    uint64_t bits;
 
     bits = 0;
     bit_index = start;

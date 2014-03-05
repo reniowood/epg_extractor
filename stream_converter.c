@@ -27,8 +27,6 @@ int sc_convert_stream_to_packet(char filename[]) {
         }
     }
 
-    free(TS_packet);
-
     fclose(TS_file);
 
     return 0;

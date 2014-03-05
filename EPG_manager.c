@@ -60,22 +60,38 @@ void em_set_EIT_version_number(uint32_t table_id, uint32_t version_number) {
     add_data_tail(new_version_number, EIT_version_number_list);
 }
 
-void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint8_t *service_name) {
-    struct Service *new_service = NULL;
+void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, char *service_name) {
+    struct Service *service = NULL;
+    struct list_node *service_entry, *event_list;
 
-    new_service = (struct Service *)malloc(sizeof(struct Service));
-    new_service->original_network_id = original_network_id;
-    new_service->transport_stream_id = transport_stream_id;
-    new_service->service_id = service_id;
-    new_service->service_name = service_name;
-    new_service->event_list = (struct list_node *)malloc(sizeof(struct list_node));
+    /* find existing service data first */
+    list_for_each(service_entry, service_list) {
+        service = get_data(service_entry, struct Service);
 
-    init_list(new_service->event_list);
+        if (service->original_network_id == original_network_id &&
+            service->transport_stream_id == transport_stream_id &&
+            service->service_id == service_id) {
+            service->service_name = service_name;
 
-    add_data_tail(new_service, service_list);
+            return;
+        }
+    }
+
+    service = (struct Service *)malloc(sizeof(struct Service));
+    service->original_network_id = original_network_id;
+    service->transport_stream_id = transport_stream_id;
+    service->service_id = service_id;
+    service->service_name = service_name;
+    service->event_list = (struct list_node *)malloc(sizeof(struct list_node));
+
+    init_list(service->event_list);
+
+    add_data_tail(service, service_list);
+
+    /* (printf("(%d, %d, %d): %s\n", original_network_id, transport_stream_id, service_id, service_name); */
 }
 
-void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, unsigned long start_time, uint32_t duration) {
+void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, uint64_t start_time, uint32_t duration) {
     struct Event *new_event = NULL;
     struct Service *service;
     struct list_node *service_entry, *event_list;
@@ -100,13 +116,24 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
         }
     }
 
-    if (event_list == NULL) {
-        printf("EVENT_STORE_ERROR\n");
+    if (event_list == NULL) { /* make dummy service data */
+        service = (struct Service *)malloc(sizeof(struct Service));
+        service->original_network_id = original_network_id;
+        service->transport_stream_id = transport_stream_id;
+        service->service_id = service_id;
+        service->service_name = NULL;
+        service->event_list = (struct list_node *)malloc(sizeof(struct list_node));
 
-        return;
+        init_list(service->event_list);
+
+        event_list = service->event_list;
+
+        add_data_tail(service, service_list);
     }
 
     add_data_tail(new_event, event_list);
+
+    /* printf("(%d, %d, %d, %d): %ld %d\n", original_network_id, transport_stream_id, service_id, event_id, start_time, duration); */
 }
 
 void em_store_content_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, struct list_node *content_description_list) {
@@ -132,9 +159,11 @@ void em_store_content_description(uint32_t original_network_id, uint32_t transpo
             }
         }
     }
+
+    /* printf("(%d, %d, %d, %d)\n", original_network_id, transport_stream_id, service_id, event_id); */
 }
 
-void em_store_event_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, uint8_t *event_name, uint8_t *event_description) {
+void em_store_event_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, char *event_name, char *event_description) {
     struct list_node *service_entry, *event_entry, *event_list;
     struct Service *service;
     struct Event *event;
@@ -204,17 +233,17 @@ void em_show_whole_EPG() {
         list_for_each(event_entry, event_list) {
             event = get_data(event_entry, struct Event);
 
-            printf("%d: %d(%d) %s - %s\n", event->event_id, event->start_time, event->duration, event->event_name, event->event_description);
+            printf("%d: %ld(%d) %s - %s\n", event->event_id, event->start_time, event->duration, event->event_name, event->event_description);
         }
 
         putchar('\n');
     }
 }
 
-void em_show_service_EPG(uint8_t *service_name) {
+void em_show_service_EPG(char *service_name) {
     return;
 }
 
-void em_show_now_EPG(unsigned long now_time) {
+void em_show_now_EPG(uint64_t now_time) {
     return;
 }
