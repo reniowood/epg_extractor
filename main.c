@@ -10,8 +10,8 @@
 #define MENU_EXIT               5
 
 #define MAX_FILENAME_LENGTH     256
-#define MAX_SERVICE_NAME_LENGTH 1024
 #define MAX_TIME_LENGTH         1024
+#define MAX_SERVICE_NAME_LENGTH 1024
 
 int main() {
     int select_menu;
@@ -51,13 +51,15 @@ int main() {
             break;
         case MENU_SHOW_SERVICE_EPG:
             printf("Enter the name of the service: ");
-            scanf("%s", service_name);
+            getchar();
+            gets(service_name);
 
             em_show_service_EPG(service_name);
 
             break;
         case MENU_SHOW_NOW_EPG:
             printf("What time is it now (YYYY-MM-DD-HH-MM): ");
+            getchar();
             scanf("%s", now_time);
 
             /* em_show_now_EPG(now_time); */
