@@ -270,10 +270,11 @@ void em_show_whole_EPG() {
 }
 
 void em_show_service_EPG(char *service_name) {
-    struct list_node *service_entry, *event_entry;
-    struct list_node *event_list;
+    struct list_node *service_entry, *event_entry, *content_description_entry, *parental_rating_entry;
     struct Service *service;
     struct Event *event;
+    struct ContentDescription *content_description;
+    struct ParentalRating *parental_rating;
 
     uint16_t MJD, year, month, date, k;
 
@@ -283,12 +284,20 @@ void em_show_service_EPG(char *service_name) {
         if (!strcmp(service_name, service->service_name)) {
             printf("(%d, %d, %d): %s\n", service->original_network_id, service->transport_stream_id, service->service_id, service->service_name);
 
-            event_list = service->event_list;
-            list_for_each(event_entry, event_list) {
+            list_for_each(event_entry, service->event_list) {
                 event = get_data(event_entry, struct Event);
 
                 printf("(%d, %d, %d, %d): %s\n", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id, event->event_name);
-
+                list_for_each(content_description_entry, event->content_description_list) {
+                    content_description = get_data(content_description_entry, struct ContentDescription);
+                    printf("(%s / %s) ", content_description->content_description_level_1, content_description->content_description_level_2);
+                }
+                putchar('\n');
+                list_for_each(parental_rating_entry, event->parental_rating_list) {
+                    parental_rating = get_data(parental_rating_entry, struct ParentalRating);
+                    printf("(%d) ", parental_rating->rating);
+                }
+                putchar('\n');
                 em_show_date_time(event->start_time, event->duration);
                 printf("\t- %s\n", event->event_description);
             }
