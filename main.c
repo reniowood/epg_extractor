@@ -66,6 +66,8 @@ int main() {
         case MENU_EXIT:
             printf("Bye.\n");
 
+            em_finish();
+
             return 0;
         default:
             printf("Enter a number between 0 and 5.\n\n");

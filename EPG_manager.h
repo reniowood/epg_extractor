@@ -8,6 +8,7 @@
 #include "linked_list.h"
 
 void em_init();
+void em_finish();
 
 uint32_t em_get_SDT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t table_id);
 uint32_t em_get_EIT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t table_id);
@@ -18,7 +19,7 @@ void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id
 void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, uint64_t start_time, uint32_t duration);
 void em_store_content_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, struct list_node *content_description_list);
 void em_store_event_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, char *event_name, char *event_description);
-void em_store_parental_rating(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, struct list_node *parental_ratings_list);
+void em_store_parental_rating(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, struct list_node *parental_rating_list);
 
 void em_show_whole_EPG();
 void em_show_service_EPG(char *service_name);
@@ -41,7 +42,7 @@ struct Event {
     uint32_t event_id;
     int start_time, duration;
     char *event_name, *event_description;
-    struct list_node *content_description_list, *parental_ratings_list;
+    struct list_node *content_description_list, *parental_rating_list;
 
     struct list_node node;
 };

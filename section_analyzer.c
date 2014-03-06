@@ -25,18 +25,14 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
     uint32_t original_network_id, transport_stream_id, service_id;
     uint32_t descriptor_tag, descriptor_length, descriptors_loop_length;
     uint32_t service_provider_name_length, service_name_length;
-    uint8_t *service_name = NULL;
+    char *service_name = NULL;
     int section_bytes_scaned, descriptors_loop_bytes_scaned;
 
     table_id = get_bits(0, 8, section);
     if (table_id != ACTUAL_SDT_ID)
         return;
 
-    /* printf("table_id: 0x%x\n", table_id); */
-
     version_number = get_bits(42, 5, section);
-    /* printf("version_number: 0x%x\n", version_number); */
-
     transport_stream_id = get_bits(24, 16, section);
     original_network_id = get_bits(64, 16, section);
 
@@ -51,7 +47,6 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
     while (section_bytes_scaned < section_length - 4) {
         service_id = get_bits(0, 16, section);
         descriptors_loop_length = get_bits(28, 12, section);
-        /* printf("descriptors_loop_length: %d\n", descriptors_loop_length); */
 
         section += 5;
         descriptors_loop_bytes_scaned = 0;
@@ -66,8 +61,9 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
 
                 service_name_length = get_bits(0, 8, section);
                 section++;
-                service_name = (uint8_t *)malloc(service_name_length);
+                service_name = (char *)malloc(service_name_length + 1);
                 memcpy(service_name, section, service_name_length);
+                service_name[service_name_length] = '\0';
 
                 section += service_name_length;
             } else {
@@ -108,10 +104,7 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
     if (table_id < MIN_ACTUAL_EVENT_SCHEDULE_TABLE_ID || table_id > MAX_ACTUAL_EVENT_SCHEDULE_TABLE_ID)
         return;
 
-    /* printf("table_id: 0x%x\n", table_id); */
-
     version_number = get_bits(42, 5, section);
-    /* printf("version_number: 0x%x\n", version_number); */
 
     service_id = get_bits(24, 16, section);
     transport_stream_id = get_bits(64, 16, section);
@@ -130,19 +123,14 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
         start_time = get_bits(16, 40, section);
         duration = get_bits(56, 24, section);
         descriptors_loop_length = get_bits(84, 12, section);
-        /* printf("descriptors_loop_length: %d\n", descriptors_loop_length); */
 
         em_store_event(original_network_id, transport_stream_id, service_id, event_id, start_time, duration);
 
         section += 12;
         descriptors_loop_bytes_scaned = 0;
         while (descriptors_loop_bytes_scaned < descriptors_loop_length) {
-            /* printf("descriptors_loop_bytes_scaned: %d\n", descriptors_loop_bytes_scaned); */
-
             descriptor_tag = get_bits(0, 8, section);
-            /* printf("descriptor_tag: 0x%x\n", descriptor_tag); */
             descriptor_length = get_bits(8, 8, section);
-            /* printf("descriptor_length: %d\n", descriptor_length); */
 
             if (descriptor_tag == CONTENT_DESCRIPTOR_TAG) { // get only first description of content
                 content_description_list = (struct list_node *)malloc(sizeof(struct list_node));
@@ -157,14 +145,12 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
 
                     content_description->content_description_level_1 = (char *)malloc(strlen(content_description_table[content_nibble_level_1][0]) + 1);
                     strcpy(content_description->content_description_level_1, content_description_table[content_nibble_level_1][0]);
-                    /* printf("content_description_level_1: %s\n", content_description->content_description_level_1); */
 
                     if (content_description_table[content_nibble_level_1][content_nibble_level_2 + 1] == 0)
                         content_description->content_description_level_2 = NULL;
                     else {
                         content_description->content_description_level_2 = (char *)malloc(strlen(content_description_table[content_nibble_level_1][content_nibble_level_2 + 1]) + 1);
                         strcpy(content_description->content_description_level_2, content_description_table[content_nibble_level_1][content_nibble_level_2 + 1]);
-                        /* printf("content_description_level_2: %s\n", content_description->content_description_level_2); */
                     }
 
                     add_data_tail(content_description, content_description_list);
@@ -178,17 +164,17 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
             } else if (descriptor_tag == SHORT_EVENT_DESCRIPTOR_TAG) {
                 event_name_length = get_bits(40, 8, section);
                 section += 6;
-                event_name = (uint8_t *)malloc(event_name_length);
+                event_name = (uint8_t *)malloc(event_name_length + 1);
                 memcpy(event_name, section, event_name_length);
-                /* printf("event_name: %s\n", event_name); */
+                event_name[event_name_length] = '\0';
                 section += event_name_length;
 
                 text_length = get_bits(0, 8, section);
                 section++;
 
-                event_description = (uint8_t *)malloc(text_length);
+                event_description = (uint8_t *)malloc(text_length + 1);
                 memcpy(event_description, section, text_length);
-                /* printf("event_description: %s\n", event_description); */
+                event_description[text_length] = '\0';
 
                 em_store_event_description(original_network_id, transport_stream_id, service_id, event_id, event_name, event_description);
 
@@ -216,7 +202,6 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
 
             descriptors_loop_bytes_scaned += 2 + descriptor_length;
         }
-        /* printf("descriptors_loop_bytes_scaned: %d\n", descriptors_loop_bytes_scaned); */
 
         section_bytes_scaned += 12 + descriptors_loop_length;
     }

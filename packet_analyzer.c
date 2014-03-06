@@ -10,15 +10,7 @@ void pa_analyze_packet(uint8_t *TS_packet) {
     PID = get_bits(11, 13, TS_packet);
 
     if ((PID == PID_SDT) || (PID == PID_EIT)) {
-        /*
-        if (PID == PID_SDT)
-            printf("SDT packet\n");
-        else
-            printf("EIT packet\n");
-        */
-
         adaptation_field_control = get_bits(26, 2, TS_packet);
-        /* printf("adaptation_field_control: %d\n", adaptation_field_control); */
         if (adaptation_field_control == 1) { /* no adaptation field */
             payload_index = 0;
         } else if (adaptation_field_control == 3) {
@@ -29,13 +21,10 @@ void pa_analyze_packet(uint8_t *TS_packet) {
         }
 
         payload_unit_start_indicator = get_bits(9, 1, TS_packet);
-        /* printf("payload_unit_start_indicator: %d\n", payload_unit_start_indicator); */
 
         /* payload_unit_start_indicator == 1; at least one section begins in a given TS packet */
         if (payload_unit_start_indicator == 1) {
             pointer_field = get_bits(32 + payload_index * 8, 8, TS_packet);
-
-            /* printf("pointer_field: %d\n", pointer_field); */
 
             memcpy(section + section_filled_length, TS_packet + payload_index, pointer_field);
             payload_index += pointer_field;
@@ -47,6 +36,9 @@ void pa_analyze_packet(uint8_t *TS_packet) {
                 } else { /* PID_EIT */
                     sa_analyze_EIT_section(section, section_length);
                 }
+
+                free(section);
+                section = NULL;
             }
 
             old_PID = PID;
@@ -72,15 +64,15 @@ void pa_analyze_packet(uint8_t *TS_packet) {
                 section_filled_length = TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
             }
         } else { /* payload_unit_start_indicator == 0; there is no section begins in a given TS packet */
-            if (section == NULL)
-                return;
-
-            if (section_length - section_filled_length >= TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index)
+            if (section_length - section_filled_length >= TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index) {
                 memcpy(section + section_filled_length, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
-            else
+
+                section_filled_length += TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
+            } else {
                 memcpy(section + section_filled_length, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, section_length - section_filled_length);
 
-            section_filled_length += TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;
+                section_filled_length = section_length;
+            }
         }
     }
 }

@@ -20,10 +20,15 @@ int sc_convert_stream_to_packet(char filename[]) {
             TS_packet = (uint8_t *)malloc(TS_PACKET_SIZE);
             TS_packet[0] = TS_packet_sync_byte;
 
-            if (fread(TS_packet + 1, TS_PACKET_SIZE - 1, 1, TS_file) == 0)
+            if (fread(TS_packet + 1, TS_PACKET_SIZE - 1, 1, TS_file) == 0) {
+                free(TS_packet);
+
                 break;
-            else
+            } else {
                 pa_analyze_packet(TS_packet);
+
+                free(TS_packet);
+            }
         }
     }
 
