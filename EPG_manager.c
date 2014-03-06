@@ -116,8 +116,11 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
     new_event->event_name = NULL;
     new_event->event_description = NULL;
 
-    new_event->content_description_list = NULL;
-    new_event->parental_rating_list = NULL;
+    new_event->content_description_list = (struct list_node *)malloc(sizeof(struct list_node));
+    new_event->parental_rating_list = (struct list_node *)malloc(sizeof(struct list_node));
+
+    init_list(new_event->content_description_list);
+    init_list(new_event->parental_rating_list);
 
     event_list = NULL;
     list_for_each(service_entry, service_list) {
@@ -172,8 +175,6 @@ void em_store_content_description(uint32_t original_network_id, uint32_t transpo
             }
         }
     }
-
-    /* printf("(%d, %d, %d, %d)\n", original_network_id, transport_stream_id, service_id, event_id); */
 }
 
 void em_store_event_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, char *event_name, char *event_description) {
@@ -231,9 +232,11 @@ void em_store_parental_rating(uint32_t original_network_id, uint32_t transport_s
 }
 
 void em_show_whole_EPG() {
-    struct list_node *service_entry, *event_entry, *event_list;
+    struct list_node *service_entry, *event_entry, *content_description_entry, *parental_rating_entry;
     struct Service *service;
     struct Event *event;
+    struct ContentDescription *content_description;
+    struct ParentalRating *parental_rating;
 
     int i;
 
@@ -244,13 +247,22 @@ void em_show_whole_EPG() {
 
         printf("(%d, %d, %d): %s\n", service->original_network_id, service->transport_stream_id, service->service_id, service->service_name);
 
-        event_list = service->event_list;
-        list_for_each(event_entry, event_list) {
+        list_for_each(event_entry, service->event_list) {
             event = get_data(event_entry, struct Event);
 
-            printf("(%d, %d, %d, %d): ", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id);
+            printf("(%d, %d, %d, %d): %s\n", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id, event->event_name);
+            list_for_each(content_description_entry, event->content_description_list) {
+                content_description = get_data(content_description_entry, struct ContentDescription);
+                printf("(%s / %s) ", content_description->content_description_level_1, content_description->content_description_level_2);
+            }
+            putchar('\n');
+            list_for_each(parental_rating_entry, event->parental_rating_list) {
+                parental_rating = get_data(parental_rating_entry, struct ParentalRating);
+                printf("(%d) ", parental_rating->rating);
+            }
+            putchar('\n');
             em_show_date_time(event->start_time, event->duration);
-            printf("%s - %s\n", event->event_name, event->event_description);
+            printf("\t- %s\n", event->event_description);
         }
 
         putchar('\n');
@@ -275,17 +287,16 @@ void em_show_service_EPG(char *service_name) {
             list_for_each(event_entry, event_list) {
                 event = get_data(event_entry, struct Event);
 
-                printf("(%d, %d, %d, %d): ", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id);
+                printf("(%d, %d, %d, %d): %s\n", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id, event->event_name);
 
-                printf("%d-%d-%d ", year, month, date);
                 em_show_date_time(event->start_time, event->duration);
-                printf("%s - %s\n", event->event_name, event->event_description);
+                printf("\t- %s\n", event->event_description);
             }
         }
     }
 }
 
-void em_show_now_EPG(uint64_t now_time) {
+void em_show_now_EPG(char *now_time) {
     return;
 }
 
@@ -403,5 +414,5 @@ void em_show_date_time(uint64_t start_time, uint32_t duration) {
     end_second %= 60;
 
     printf("%d-%d-%d ", year, month, date);
-    printf("%02d:%02d:%02d - %02d:%02d:%02d (%02d:%02d:%02d) ", start_hour, start_minute, start_second, end_hour, end_minute, end_second, duration_hour, duration_minute, duration_second);
+    printf("%02d:%02d:%02d - %02d:%02d:%02d (%02d:%02d:%02d)\n", start_hour, start_minute, start_second, end_hour, end_minute, end_second, duration_hour, duration_minute, duration_second);
 }

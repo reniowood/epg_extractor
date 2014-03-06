@@ -180,8 +180,6 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
 
                 section += text_length;
             } else if (descriptor_tag == PARENTAL_RATING_DESCRIPTOR_TAG) {
-                init_list(parental_rating_list);
-
                 descriptor_data_bytes_scaned = 0;
                 while (descriptor_data_bytes_scaned < descriptor_length) {
                     parental_rating = (struct ParentalRating *)malloc(sizeof(struct ParentalRating));

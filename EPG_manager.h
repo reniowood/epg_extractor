@@ -23,7 +23,7 @@ void em_store_parental_rating(uint32_t original_network_id, uint32_t transport_s
 
 void em_show_whole_EPG();
 void em_show_service_EPG(char *service_name);
-void em_show_now_EPG(uint64_t now_time);
+void em_show_now_EPG(char *now_time);
 
 void em_show_date_time(uint64_t start_time, uint32_t duration);
 
