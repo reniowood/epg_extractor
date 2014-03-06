@@ -249,8 +249,7 @@ void em_show_whole_EPG() {
             event = get_data(event_entry, struct Event);
 
             printf("(%d, %d, %d, %d): ", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id);
-            printf("%02x:%02x:%02x", (event->start_time >> 16) & 0xff, (event->start_time >> 8) & 0xff, (event->start_time) & 0xff);
-            printf("(%02x:%02x:%02x) ", (event->duration >> 16) & 0xff, (event->duration >> 8) & 0xff, (event->duration) & 0xff);
+            em_show_date_time(event->start_time, event->duration);
             printf("%s - %s\n", event->event_name, event->event_description);
         }
 
@@ -259,7 +258,31 @@ void em_show_whole_EPG() {
 }
 
 void em_show_service_EPG(char *service_name) {
-    return;
+    struct list_node *service_entry, *event_entry;
+    struct list_node *event_list;
+    struct Service *service;
+    struct Event *event;
+
+    uint16_t MJD, year, month, date, k;
+
+    list_for_each(service_entry, service_list) {
+        service = get_data(service_entry, struct Service);
+
+        if (!strcmp(service_name, service->service_name)) {
+            printf("(%d, %d, %d): %s\n", service->original_network_id, service->transport_stream_id, service->service_id, service->service_name);
+
+            event_list = service->event_list;
+            list_for_each(event_entry, event_list) {
+                event = get_data(event_entry, struct Event);
+
+                printf("(%d, %d, %d, %d): ", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id);
+
+                printf("%d-%d-%d ", year, month, date);
+                em_show_date_time(event->start_time, event->duration);
+                printf("%s - %s\n", event->event_name, event->event_description);
+            }
+        }
+    }
 }
 
 void em_show_now_EPG(uint64_t now_time) {
@@ -340,4 +363,45 @@ void em_finish() {
         entry = old_entry;
     }
     free(service_list);
+}
+
+void em_show_date_time(uint64_t start_time, uint32_t duration) {
+    uint16_t MJD, year, month, date, k;
+    uint16_t start_hour, start_minute, start_second;
+    uint16_t duration_hour, duration_minute, duration_second;
+    uint16_t end_hour, end_minute, end_second;
+
+    MJD = (start_time >> 24) & 0xffff;
+    year = (MJD - 15078.2) / 365.25;
+    month = (MJD - 14956.1 - (int)(year * 365.25)) / 30.6001;
+    date = MJD - 14956 - (int)(year * 365.25) - (int)(month * 30.6001);
+    if (month == 14 || month == 15)
+        k = 1;
+    else
+        k = 0;
+    year += k;
+    year += 1900;
+    month -= 1 + 12 * k;
+
+    start_time &= 0xffffff;
+    duration &= 0xffffff;
+
+    start_hour = ((start_time >> 16) & 0xff) / 16 * 10+ ((start_time >> 16) & 0xff) % 16;
+    start_minute = ((start_time >> 8) & 0xff) / 16 * 10 + ((start_time >> 8) & 0xff) % 16;
+    start_second = (start_time & 0xff) / 16 + (start_time & 0xff) % 16;
+
+    duration_hour = ((duration >> 16) & 0xff) / 16 * 10 + ((duration >> 16) & 0xff) % 16;
+    duration_minute = ((duration >> 8) & 0xff) / 16 * 10 + ((duration >> 8) & 0xff) % 16;
+    duration_second = (duration & 0xff) / 16 * 10 + (duration & 0xff) % 16;
+
+    end_second = start_second + duration_second;
+    end_minute = start_minute + duration_minute + end_second / 60;
+    end_hour = start_hour + duration_hour + end_minute / 60;
+
+    end_hour %= 24;
+    end_minute %= 60;
+    end_second %= 60;
+
+    printf("%d-%d-%d ", year, month, date);
+    printf("%02d:%02d:%02d - %02d:%02d:%02d (%02d:%02d:%02d) ", start_hour, start_minute, start_second, end_hour, end_minute, end_second, duration_hour, duration_minute, duration_second);
 }

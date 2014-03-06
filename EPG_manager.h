@@ -25,6 +25,8 @@ void em_show_whole_EPG();
 void em_show_service_EPG(char *service_name);
 void em_show_now_EPG(uint64_t now_time);
 
+void em_show_date_time(uint64_t start_time, uint32_t duration);
+
 struct Service {
     uint32_t original_network_id;
     uint32_t transport_stream_id;
@@ -40,7 +42,8 @@ struct Event {
     uint32_t transport_stream_id;
     uint32_t service_id;
     uint32_t event_id;
-    int start_time, duration;
+    uint64_t start_time;
+    uint32_t duration;
     char *event_name, *event_description;
     struct list_node *content_description_list, *parental_rating_list;
 
