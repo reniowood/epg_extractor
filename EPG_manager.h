@@ -30,6 +30,7 @@ struct Event {
     uint16_t start_year, start_month, start_day;
     uint16_t start_hour, start_minute, start_second;
     uint16_t duration_hour, duration_minute, duration_second;
+    uint16_t end_year, end_month, end_day;
     uint16_t end_hour, end_minute, end_second;
 
     struct list_node node;
@@ -69,7 +70,6 @@ void em_show_event_data(uint32_t original_network_id, uint32_t transport_stream_
 
 void em_show_service(struct Service *service);
 void em_show_event(struct Event *event);
-void em_show_date_time(uint64_t start_time, uint32_t duration);
 
 struct list_node *SDT_version_number_list;
 struct list_node *EIT_version_number_list;

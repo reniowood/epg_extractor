@@ -62,7 +62,7 @@ int main() {
             getchar();
             scanf("%s", now_time);
 
-            /* em_show_now_EPG(now_time); */
+            em_show_now_EPG(now_time);
 
             break;
         case MENU_EXIT:

@@ -172,6 +172,7 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
     uint16_t MJD, year, month, day, k;
     uint16_t start_hour, start_minute, start_second;
     uint16_t duration_hour, duration_minute, duration_second;
+    uint16_t end_year, end_month, end_day;
     uint16_t end_hour, end_minute, end_second;
 
     new_event = (struct Event *)malloc(sizeof(struct Event));
@@ -218,6 +219,10 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
     end_minute %= 60;
     end_second %= 60;
 
+    end_day = day + end_hour / 24;
+    end_month = month;
+    end_year = year;
+
     new_event->start_year = year;
     new_event->start_month = month;
     new_event->start_day = day;
@@ -229,6 +234,10 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
     new_event->duration_hour = duration_hour;
     new_event->duration_minute = duration_minute;
     new_event->duration_second = duration_second;
+
+    new_event->end_year = year;
+    new_event->end_month = month;
+    new_event->end_day = day;
 
     new_event->end_hour = end_hour;
     new_event->end_minute = end_minute;
@@ -362,8 +371,6 @@ void em_show_service_EPG(char *service_name) {
     struct Event *event;
     struct ContentDescription *content_description;
 
-    uint16_t MJD, year, month, date, k;
-
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
 
@@ -382,10 +389,52 @@ void em_show_service_EPG(char *service_name) {
 }
 
 void em_show_now_EPG(char *now_time) {
-    return;
-}
+    struct list_node *service_entry, *event_entry;
+    struct Service *service;
+    struct Event *event;
 
-void em_show_date_time(uint64_t start_time, uint32_t duration) {
+    uint64_t time, l;
+    uint16_t year, month, day;
+    uint16_t hour, minute, second;
+
+    char *token;
+
+    token = strtok(now_time, "-");
+    year = atoi(token);
+    token = strtok(NULL, "-");
+    month = atoi(token);
+    token = strtok(NULL, "-");
+    day = atoi(token);
+    token = strtok(NULL, "-");
+    hour = atoi(token);
+    token = strtok(NULL, "-");
+    minute = atoi(token);
+    token = strtok(NULL, "-");
+    second = atoi(token);
+
+    list_for_each(service_entry, service_list) {
+        service = get_data(service_entry, struct Service);
+
+        em_show_service(service);
+
+        list_for_each(event_entry, service->event_list) {
+            event = get_data(event_entry, struct Event);
+
+            if (event->start_year <= year &&
+                event->start_month <= month &&
+                event->start_day <= day &&
+                event->start_hour <= hour &&
+                event->start_minute <= minute &&
+                event->start_second <= second &&
+                event->end_year >= year &&
+                event->end_month >= month &&
+                event->end_day >= day &&
+                event->end_hour >= hour &&
+                event->end_minute >= minute &&
+                event->end_second >= second)
+                em_show_event(event);
+        }
+    }
 }
 
 void em_show_service(struct Service *service) {
