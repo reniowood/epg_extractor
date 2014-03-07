@@ -1,8 +1,8 @@
 #include "packet_analyzer.h"
 
 void pa_analyze_packet(uint8_t *TS_packet) {
-    static uint32_t old_PID, PID;
-    uint32_t adaptation_field_control, adaptation_field_length, payload_index, payload_unit_start_indicator, pointer_field;
+    static uint16_t old_PID, PID;
+    uint8_t adaptation_field_control, adaptation_field_length, payload_index, transport_error_indicator, payload_unit_start_indicator, pointer_field;
     static uint32_t section_length = 0, section_filled_length = 0;
     static uint8_t *section = NULL;
 
@@ -19,6 +19,10 @@ void pa_analyze_packet(uint8_t *TS_packet) {
         } else {
             return;
         }
+
+        transport_error_indicator = get_bits(8, 1, TS_packet);
+        if (transport_error_indicator)
+            return;
 
         payload_unit_start_indicator = get_bits(9, 1, TS_packet);
 

@@ -21,7 +21,7 @@ char content_description_table[0xf][0xf+1][MAX_CONTENT_DESCRIPTION_LENGTH] =
 };
 
 void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
-    uint32_t table_id, version_number, table_version_number;
+    uint32_t table_id, table_version_number, section_version_number;
     uint32_t original_network_id, transport_stream_id, service_id;
     uint32_t descriptor_tag, descriptor_length, descriptors_loop_length;
     uint32_t service_provider_name_length, service_name_length;
@@ -32,15 +32,20 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
     if (table_id != ACTUAL_SDT_ID)
         return;
 
-    version_number = get_bits(42, 5, section);
+    section_version_number = get_bits(42, 5, section);
     transport_stream_id = get_bits(24, 16, section);
     original_network_id = get_bits(64, 16, section);
 
-    table_version_number = em_get_SDT_version_number(original_network_id, transport_stream_id, table_id);
-    if (table_version_number != (uint32_t)-1 && table_version_number != (version_number + 1) % 32)
+    /*
+    section_number = get_bits(48, 8, section);
+    last_section_number = get_bits(56, 8, section);
+    table_version_number = em_get_SDT_version_number(original_network_id, transport_stream_id, service_id, table_id);
+
+    if (table_version_number != (uint32_t)-1 && section_version_number != (table_version_number + 1) % 32)
         return;
     else
-        em_set_SDT_version_number(original_network_id, transport_stream_id, table_id, version_number);
+        em_set_SDT_version_number(original_network_id, transport_stream_id, service_id, table_id, section_version_number);
+    */
 
     section += 11;
     section_bytes_scaned = 11;
@@ -80,8 +85,10 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
 }
 
 void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
-    uint32_t table_id, version_number, table_version_number;
+    uint32_t table_id, section_version_number, table_version_number;
     uint32_t original_network_id, transport_stream_id, service_id, event_id;
+    uint8_t section_number, last_section_number;
+
     uint8_t descriptor_tag, descriptor_length;
     uint32_t descriptors_loop_length;
     int section_bytes_scaned, descriptors_loop_bytes_scaned, descriptor_data_bytes_scaned;
@@ -95,8 +102,6 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
     struct ContentDescription *content_description;
     uint8_t content_nibble_level_1, content_nibble_level_2;
 
-    struct list_node *parental_rating_list;
-    struct ParentalRating *parental_rating;
     int country_code;
     uint8_t rating;
 
@@ -104,17 +109,22 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
     if (table_id < MIN_ACTUAL_EVENT_SCHEDULE_TABLE_ID || table_id > MAX_ACTUAL_EVENT_SCHEDULE_TABLE_ID)
         return;
 
-    version_number = get_bits(42, 5, section);
+    section_version_number = get_bits(42, 5, section);
 
     service_id = get_bits(24, 16, section);
     transport_stream_id = get_bits(64, 16, section);
     original_network_id = get_bits(80, 16, section);
 
+    /*
+    section_number = get_bits(48, 8, section);
+    last_section_number = get_bits(56, 8, section);
     table_version_number = em_get_EIT_version_number(original_network_id, transport_stream_id, service_id, table_id);
-    if (table_version_number != (uint32_t)-1 && table_version_number != (version_number + 1) % 32)
+
+    if (table_version_number != (uint32_t)-1 && section_version_number != (table_version_number + 1) % 32)
         return;
     else
-        em_set_EIT_version_number(original_network_id, transport_stream_id, service_id, table_id, version_number);
+        em_set_EIT_version_number(original_network_id, transport_stream_id, service_id, table_id, section_version_number);
+    */
 
     section += 14;
     section_bytes_scaned = 14;
@@ -122,17 +132,24 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
         event_id = get_bits(0, 16, section);
         start_time = get_bits(16, 40, section);
         duration = get_bits(56, 24, section);
+        event_name = NULL;
+        event_description = NULL;
+        content_description_list = NULL;
+
         descriptors_loop_length = get_bits(84, 12, section);
-
-        em_store_event(original_network_id, transport_stream_id, service_id, event_id, start_time, duration);
-
         section += 12;
+        if (descriptors_loop_length == 0) {
+            section_bytes_scaned += 12;
+
+            continue;
+        }
+
         descriptors_loop_bytes_scaned = 0;
         while (descriptors_loop_bytes_scaned < descriptors_loop_length) {
             descriptor_tag = get_bits(0, 8, section);
             descriptor_length = get_bits(8, 8, section);
 
-            if (descriptor_tag == CONTENT_DESCRIPTOR_TAG) { // get only first description of content
+            if (descriptor_tag == CONTENT_DESCRIPTOR_TAG) {
                 content_description_list = (struct list_node *)malloc(sizeof(struct list_node));
                 init_list(content_description_list);
 
@@ -179,21 +196,6 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
                 em_store_event_description(original_network_id, transport_stream_id, service_id, event_id, event_name, event_description);
 
                 section += text_length;
-            } else if (descriptor_tag == PARENTAL_RATING_DESCRIPTOR_TAG) {
-                descriptor_data_bytes_scaned = 0;
-                while (descriptor_data_bytes_scaned < descriptor_length) {
-                    parental_rating = (struct ParentalRating *)malloc(sizeof(struct ParentalRating));
-                    parental_rating->country_code = get_bits(16 + descriptor_data_bytes_scaned * 8, 24, section);
-                    parental_rating->rating = get_bits(16 + descriptor_data_bytes_scaned * 8 + 24, 8, section);
-
-                    add_data_tail(parental_rating, parental_rating_list);
-
-                    descriptor_data_bytes_scaned += 4;
-                }
-
-                em_store_parental_rating(original_network_id, transport_stream_id, service_id, event_id, parental_rating_list);
-
-                section += 2 + descriptor_length;
             } else {
                 section += 2 + descriptor_length;
             }
@@ -203,4 +205,6 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
 
         section_bytes_scaned += 12 + descriptors_loop_length;
     }
+
+    em_store_event(original_network_id, transport_stream_id, service_id, event_id, start_time, duration);
 }

@@ -15,7 +15,6 @@
 #define SERVICE_DESCRIPTOR_TAG              0x48
 #define CONTENT_DESCRIPTOR_TAG              0x54
 #define SHORT_EVENT_DESCRIPTOR_TAG          0x4d
-#define PARENTAL_RATING_DESCRIPTOR_TAG      0x55
 
 #define MAX_CONTENT_DESCRIPTION_LENGTH      64
 
@@ -24,13 +23,6 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length);
 
 struct ContentDescription {
     char *content_description_level_1, *content_description_level_2;
-
-    struct list_node node;
-};
-
-struct ParentalRating {
-    int country_code;
-    uint8_t rating;
 
     struct list_node node;
 };
