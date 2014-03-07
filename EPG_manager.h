@@ -27,6 +27,11 @@ struct Event {
     char *event_name, *event_description;
     struct list_node *content_description_list;
 
+    uint16_t start_year, start_month, start_day;
+    uint16_t start_hour, start_minute, start_second;
+    uint16_t duration_hour, duration_minute, duration_second;
+    uint16_t end_hour, end_minute, end_second;
+
     struct list_node node;
 };
 
