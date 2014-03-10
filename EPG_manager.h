@@ -7,6 +7,8 @@
 #include "common.h"
 #include "linked_list.h"
 
+#include "section_analyzer.h"
+
 struct Service {
     struct Identifier id;
 

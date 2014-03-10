@@ -1,5 +1,4 @@
 #include "EPG_manager.h"
-#include "section_analyzer.h"
 
 void em_init() {
     SDT_version_number_list = (struct list_node *)malloc(sizeof(struct list_node));
