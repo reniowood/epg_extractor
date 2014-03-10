@@ -209,7 +209,7 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
         }
 
         section_bytes_scaned += 12 + descriptors_loop_length;
-    }
 
-    em_store_event(id, start_time, duration);
+        em_store_event(id, start_time, duration);
+    }
 }

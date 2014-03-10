@@ -54,3 +54,64 @@ int compare_id(struct Identifier *id_1, struct Identifier *id_2) {
             ((id_1->event_id == -1 || id_2->event_id == -1) || id_1->event_id == id_2->event_id) &&
             ((id_1->table_id == -1 || id_2->table_id == -1) || id_1->table_id == id_2->table_id));
 }
+
+struct Date init_date() {
+    struct Date date;
+
+    date.year = 0;
+    date.month = 0;
+    date.day = 0;
+    date.hour = 0;
+    date.minute = 0;
+    date.second = 0;
+}
+
+int compare_date(struct Date *date_1, struct Date *date_2) {
+    if (date_1->year < date_2->year ||
+       ((date_1->year == date_2->year) && date_1->month < date_2->month) ||
+       ((date_1->year == date_2->year && date_1->month == date_2->month) && date_1->day < date_2->day) ||
+       ((date_1->year == date_2->year && date_1->month == date_2->month && date_1->day == date_2->day) && date_1->hour < date_2->hour) ||
+       ((date_1->year == date_2->year && date_1->month == date_2->month && date_1->day == date_2->day && date_1->hour == date_2->hour) && date_1->minute < date_2->minute) ||
+       ((date_1->year == date_2->year && date_1->month == date_2->month && date_1->day == date_2->day && date_1->hour == date_2->hour && date_1->minute == date_2->minute) && date_1->second <= date_2->second))
+        return 1; // date_1 <= date_2;
+    else
+        return 0; // date_1 > date_2;
+}
+
+void get_ymd(struct Date *date, uint64_t time) {
+    uint16_t MJD, k;
+
+    MJD = (time >> 24) & 0xffff;
+    date->year = (MJD - 15078.2) / 365.25;
+    date->month = (MJD - 14956.1 - (int)(date->year * 365.25)) / 30.6001;
+    date->day = MJD - 14956 - (int)(date->year * 365.25) - (int)(date->month * 30.6001);
+    if (date->month == 14 || date->month == 15)
+        k = 1;
+    else
+        k = 0;
+    date->year += k;
+    date->year += 1900;
+    date->month -= 1 + 12 * k;
+}
+
+void get_hms(struct Date *date, uint64_t time) {
+    time &= 0xffffff;
+
+    date->hour = ((time >> 16) & 0xff) / 16 * 10+ ((time >> 16) & 0xff) % 16;
+    date->minute = ((time >> 8) & 0xff) / 16 * 10 + ((time >> 8) & 0xff) % 16;
+    date->second = (time & 0xff) / 16 + (time & 0xff) % 16;
+}
+
+void add_date(struct Date *result, struct Date *date_1, struct Date *date_2) {
+    result->second = date_1->second + date_2->second;
+    result->minute = date_1->minute + date_2->minute + result->second / 60;
+    result->hour = date_1->hour + date_2->hour + result->minute / 60;
+
+    result->hour %= 24;
+    result->minute %= 60;
+    result->second %= 60;
+
+    result->day = date_1->day + result->hour / 24;
+    result->month = date_1->month;
+    result->year = date_1->year;
+}

@@ -20,18 +20,10 @@ struct Service {
 
 struct Event {
     struct Identifier id;
-    
-    uint64_t start_time;
-    uint32_t duration;
 
     char *event_name, *event_description;
     struct list_node *content_description_list;
-
-    uint16_t start_year, start_month, start_day;
-    uint16_t start_hour, start_minute, start_second;
-    uint16_t duration_hour, duration_minute, duration_second;
-    uint16_t end_year, end_month, end_day;
-    uint16_t end_hour, end_minute, end_second;
+    struct Date start, duration, end;
 
     struct list_node node;
 };
@@ -71,6 +63,8 @@ void em_show_now_EPG(char *now_time);
 
 void em_show_service(struct Service *service);
 void em_show_event(struct Event *event);
+
+struct Date translate_start_time(uint64_t start_time);
 
 struct list_node *SDT_version_number_list;
 struct list_node *EIT_version_number_list;

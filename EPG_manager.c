@@ -154,77 +154,22 @@ void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration
     struct Service *service;
     struct list_node *service_entry, *event_entry, *event_list;
 
-    uint16_t MJD, year, month, day, k;
-    uint16_t start_hour, start_minute, start_second;
-    uint16_t duration_hour, duration_minute, duration_second;
-    uint16_t end_year, end_month, end_day;
-    uint16_t end_hour, end_minute, end_second;
-
     new_event = (struct Event *)malloc(sizeof(struct Event));
     new_event->id = id;
-
-    new_event->start_time = start_time;
-    new_event->duration = duration;
 
     new_event->event_name = NULL;
     new_event->event_description = NULL;
 
     new_event->content_description_list = (struct list_node *)malloc(sizeof(struct list_node));
 
-    MJD = (start_time >> 24) & 0xffff;
-    year = (MJD - 15078.2) / 365.25;
-    month = (MJD - 14956.1 - (int)(year * 365.25)) / 30.6001;
-    day = MJD - 14956 - (int)(year * 365.25) - (int)(month * 30.6001);
-    if (month == 14 || month == 15)
-        k = 1;
-    else
-        k = 0;
-    year += k;
-    year += 1900;
-    month -= 1 + 12 * k;
+    new_event->start = init_date();
+    new_event->end = init_date();
+    new_event->duration = init_date();
 
-    start_time &= 0xffffff;
-    duration &= 0xffffff;
-
-    start_hour = ((start_time >> 16) & 0xff) / 16 * 10+ ((start_time >> 16) & 0xff) % 16;
-    start_minute = ((start_time >> 8) & 0xff) / 16 * 10 + ((start_time >> 8) & 0xff) % 16;
-    start_second = (start_time & 0xff) / 16 + (start_time & 0xff) % 16;
-
-    duration_hour = ((duration >> 16) & 0xff) / 16 * 10 + ((duration >> 16) & 0xff) % 16;
-    duration_minute = ((duration >> 8) & 0xff) / 16 * 10 + ((duration >> 8) & 0xff) % 16;
-    duration_second = (duration & 0xff) / 16 * 10 + (duration & 0xff) % 16;
-
-    end_second = start_second + duration_second;
-    end_minute = start_minute + duration_minute + end_second / 60;
-    end_hour = start_hour + duration_hour + end_minute / 60;
-
-    end_hour %= 24;
-    end_minute %= 60;
-    end_second %= 60;
-
-    end_day = day + end_hour / 24;
-    end_month = month;
-    end_year = year;
-
-    new_event->start_year = year;
-    new_event->start_month = month;
-    new_event->start_day = day;
-
-    new_event->start_hour = start_hour;
-    new_event->start_minute = start_minute;
-    new_event->start_second = start_second;
-
-    new_event->duration_hour = duration_hour;
-    new_event->duration_minute = duration_minute;
-    new_event->duration_second = duration_second;
-
-    new_event->end_year = year;
-    new_event->end_month = month;
-    new_event->end_day = day;
-
-    new_event->end_hour = end_hour;
-    new_event->end_minute = end_minute;
-    new_event->end_second = end_second;
+    get_ymd(&new_event->start, start_time);
+    get_hms(&new_event->start, start_time);
+    get_hms(&new_event->duration, duration);
+    add_date(&new_event->end, &new_event->start, &new_event->duration);
 
     init_list(new_event->content_description_list);
 
@@ -256,7 +201,7 @@ void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration
     list_for_each(event_entry, event_list) {
         event = get_data(event_entry, struct Event);
 
-        if (new_event->start_time < event->start_time) {
+        if (compare_date(&new_event->start, &event->start)) {
             add_data_before(new_event, event_entry, event_list);
             new_event = NULL;
 
@@ -367,24 +312,22 @@ void em_show_now_EPG(char *now_time) {
     struct Service *service;
     struct Event *event;
 
-    uint64_t time, l;
-    uint16_t year, month, day;
-    uint16_t hour, minute, second;
+    struct Date now;
 
     char *token;
 
     token = strtok(now_time, "-");
-    year = atoi(token);
+    now.year = atoi(token);
     token = strtok(NULL, "-");
-    month = atoi(token);
+    now.month = atoi(token);
     token = strtok(NULL, "-");
-    day = atoi(token);
+    now.day = atoi(token);
     token = strtok(NULL, "-");
-    hour = atoi(token);
+    now.hour = atoi(token);
     token = strtok(NULL, "-");
-    minute = atoi(token);
+    now.minute = atoi(token);
     token = strtok(NULL, "-");
-    second = atoi(token);
+    now.second = atoi(token);
 
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
@@ -394,18 +337,7 @@ void em_show_now_EPG(char *now_time) {
         list_for_each(event_entry, service->event_list) {
             event = get_data(event_entry, struct Event);
 
-            if (event->start_year <= year &&
-                event->start_month <= month &&
-                event->start_day <= day &&
-                event->start_hour <= hour &&
-                event->start_minute <= minute &&
-                event->start_second <= second &&
-                event->end_year >= year &&
-                event->end_month >= month &&
-                event->end_day >= day &&
-                event->end_hour >= hour &&
-                event->end_minute >= minute &&
-                event->end_second >= second)
+            if (event->event_name && compare_date(&event->start, &now) && compare_date(&now, &event->end))
                 em_show_event(event);
         }
     }
@@ -431,8 +363,8 @@ void em_show_event(struct Event *event) {
     putchar('\n');
 
     printf("TIME: ");
-    printf("%d-%d-%d ", event->start_year, event->start_month, event->start_day);
-    printf("%02d:%02d:%02d - %02d:%02d:%02d (%02d:%02d:%02d)", event->start_hour, event->start_minute, event->start_second, event->end_hour, event->end_minute, event->end_second, event->duration_hour, event->duration_minute, event->duration_second);
+    printf("%d-%d-%d ", event->start.year, event->start.month, event->start.day);
+    printf("%02d:%02d:%02d - %02d:%02d:%02d (%02d:%02d:%02d)", event->start.hour, event->start.minute, event->start.second, event->end.hour, event->end.minute, event->end.second, event->duration.hour, event->duration.minute, event->duration.second);
     putchar('\n');
 
     printf("EVENT_DESCRIPTION: %s\n", event->event_description);
