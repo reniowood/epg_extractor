@@ -34,3 +34,23 @@ uint64_t get_bits(uint8_t start, uint8_t size, uint8_t *data) {
 
     return bits;
 }
+
+struct Identifier init_id() {
+    struct Identifier id;
+
+    id.original_network_id = -1;
+    id.transport_stream_id = -1;
+    id.service_id = -1;
+    id.event_id = -1;
+    id.table_id = -1;
+
+    return id;
+}
+
+int compare_id(struct Identifier *id_1, struct Identifier *id_2) {
+    return (id_1->original_network_id == id_2->original_network_id &&
+            id_1->transport_stream_id == id_2->transport_stream_id &&
+            id_1->service_id == id_2->service_id &&
+            ((id_1->event_id == -1 || id_2->event_id == -1) || id_1->event_id == id_2->event_id) &&
+            ((id_1->table_id == -1 || id_2->table_id == -1) || id_1->table_id == id_2->table_id));
+}

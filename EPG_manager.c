@@ -11,22 +11,6 @@ void em_init() {
     init_list(service_list);
 }
 
-uint32_t em_get_SDT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t table_id) {
-    struct list_node *version_number_entry = NULL;
-    struct SDTVersionNumber *version_number = NULL;
-
-    list_for_each(version_number_entry, SDT_version_number_list) {
-        version_number = get_data(version_number_entry, struct SDTVersionNumber);
-
-        if (version_number->original_network_id == original_network_id &&
-            version_number->transport_stream_id == transport_stream_id &&
-            version_number->table_id == table_id)
-                return version_number->version_number;
-    }
-
-    return -1;
-}
-
 void em_finish() {
     struct list_node *entry, *old_entry, *event_entry, *old_event_entry, *content_description_entry, *old_content_description_entry;
     struct SDTVersionNumber *SDT_version_number;
@@ -91,51 +75,57 @@ void em_finish() {
     free(service_list);
 }
 
-uint32_t em_get_EIT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t table_id) {
+uint32_t em_get_SDT_version_number(struct Identifier id, uint32_t table_id) {
+    struct list_node *version_number_entry = NULL;
+    struct SDTVersionNumber *version_number = NULL;
+
+    list_for_each(version_number_entry, SDT_version_number_list) {
+        version_number = get_data(version_number_entry, struct SDTVersionNumber);
+
+        if (compare_id(&version_number->id, &id))
+            return version_number->version_number;
+    }
+
+    return -1;
+}
+
+uint32_t em_get_EIT_version_number(struct Identifier id, uint32_t table_id) {
     struct list_node *version_number_entry = NULL;
     struct EITVersionNumber *version_number = NULL;
 
     list_for_each(version_number_entry, EIT_version_number_list) {
         version_number = get_data(version_number_entry, struct EITVersionNumber);
 
-        if (version_number->original_network_id == original_network_id &&
-            version_number->transport_stream_id == transport_stream_id &&
-            version_number->service_id == service_id &&
-            version_number->table_id == table_id)
-                return version_number->version_number;
+        if (compare_id(&version_number->id, &id))
+            return version_number->version_number;
     }
 
     return -1;
 }
 
-void em_set_SDT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t table_id, uint32_t version_number) {
+void em_set_SDT_version_number(struct Identifier id, uint32_t table_id, uint32_t version_number) {
     struct SDTVersionNumber *new_version_number = NULL;
 
     new_version_number = (struct SDTVersionNumber *)malloc(sizeof(struct SDTVersionNumber));
 
-    new_version_number->original_network_id = original_network_id;
-    new_version_number->transport_stream_id = transport_stream_id;
-    new_version_number->table_id = table_id;
+    new_version_number->id = id;
     new_version_number->version_number = version_number;
 
     add_data_tail(new_version_number, SDT_version_number_list);
 }
 
-void em_set_EIT_version_number(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t table_id, uint32_t version_number) {
+void em_set_EIT_version_number(struct Identifier id, uint32_t table_id, uint32_t version_number) {
     struct EITVersionNumber *new_version_number;
 
     new_version_number = (struct EITVersionNumber *)malloc(sizeof(struct EITVersionNumber));
 
-    new_version_number->original_network_id = original_network_id;
-    new_version_number->transport_stream_id = transport_stream_id;
-    new_version_number->service_id = service_id;
-    new_version_number->table_id = table_id;
+    new_version_number->id = id;
     new_version_number->version_number = version_number;
 
     add_data_tail(new_version_number, EIT_version_number_list);
 }
 
-void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, char *service_name) {
+void em_store_service(struct Identifier id, char *service_name) {
     struct Service *service = NULL;
     struct list_node *service_entry, *event_list;
 
@@ -143,9 +133,7 @@ void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
 
-        if (service->original_network_id == original_network_id &&
-            service->transport_stream_id == transport_stream_id &&
-            service->service_id == service_id) {
+        if (compare_id(&service->id, &id)) {
             service->service_name = service_name;
 
             return;
@@ -153,9 +141,7 @@ void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id
     }
 
     service = (struct Service *)malloc(sizeof(struct Service));
-    service->original_network_id = original_network_id;
-    service->transport_stream_id = transport_stream_id;
-    service->service_id = service_id;
+    service->id = id;
     service->service_name = service_name;
     service->event_list = (struct list_node *)malloc(sizeof(struct list_node));
 
@@ -164,7 +150,7 @@ void em_store_service(uint32_t original_network_id, uint32_t transport_stream_id
     add_data_tail(service, service_list);
 }
 
-void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, uint64_t start_time, uint32_t duration) {
+void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration) {
     struct Event *new_event = NULL, *event;
     struct Service *service;
     struct list_node *service_entry, *event_entry, *event_list;
@@ -176,10 +162,8 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
     uint16_t end_hour, end_minute, end_second;
 
     new_event = (struct Event *)malloc(sizeof(struct Event));
-    new_event->original_network_id = original_network_id;
-    new_event->transport_stream_id = transport_stream_id;
-    new_event->service_id = service_id;
-    new_event->event_id = event_id;
+    new_event->id = id;
+
     new_event->start_time = start_time;
     new_event->duration = duration;
 
@@ -246,11 +230,11 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
     init_list(new_event->content_description_list);
 
     event_list = NULL;
+    id.event_id = -1;
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
-        if (service->original_network_id == original_network_id &&
-            service->transport_stream_id == transport_stream_id &&
-            service->service_id == service_id) {
+
+        if (compare_id(&service->id, &id)) {
             event_list = service->event_list;
 
             break;
@@ -259,9 +243,7 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
 
     if (event_list == NULL) { /* make dummy service data */
         service = (struct Service *)malloc(sizeof(struct Service));
-        service->original_network_id = original_network_id;
-        service->transport_stream_id = transport_stream_id;
-        service->service_id = service_id;
+        service->id = id;
         service->service_name = NULL;
         service->event_list = (struct list_node *)malloc(sizeof(struct list_node));
 
@@ -287,7 +269,7 @@ void em_store_event(uint32_t original_network_id, uint32_t transport_stream_id, 
         add_data_tail(new_event, event_list);
 }
 
-void em_store_content_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, struct list_node *content_description_list) {
+void em_store_content_description(struct Identifier id, struct list_node *content_description_list) {
     struct list_node *service_entry, *event_entry, *event_list;
     struct Service *service;
     struct Event *event;
@@ -295,14 +277,12 @@ void em_store_content_description(uint32_t original_network_id, uint32_t transpo
     event = NULL;
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
-        if (service->original_network_id == original_network_id &&
-            service->transport_stream_id == transport_stream_id &&
-            service->service_id == service_id) {
+        if (compare_id(&service->id, &id)) {
             event_list = service->event_list;
 
             list_for_each(event_entry, event_list) {
                 event = get_data(event_entry, struct Event);
-                if (event->event_id == event_id) {
+                if (compare_id(&event->id, &id)) {
                     event->content_description_list = content_description_list;
 
                     return;
@@ -312,7 +292,7 @@ void em_store_content_description(uint32_t original_network_id, uint32_t transpo
     }
 }
 
-void em_store_event_description(uint32_t original_network_id, uint32_t transport_stream_id, uint32_t service_id, uint32_t event_id, char *event_name, char *event_description) {
+void em_store_event_description(struct Identifier id, char *event_name, char *event_description) {
     struct list_node *service_entry, *event_entry, *event_list;
     struct Service *service;
     struct Event *event;
@@ -320,15 +300,13 @@ void em_store_event_description(uint32_t original_network_id, uint32_t transport
     event = NULL;
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
-        if (service->original_network_id == original_network_id &&
-            service->transport_stream_id == transport_stream_id &&
-            service->service_id == service_id) {
+        if (compare_id(&service->id, &id)) {
             event_list = service->event_list;
 
             list_for_each(event_entry, event_list) {
                 event = get_data(event_entry, struct Event);
 
-                if (event->event_id == event_id) {
+                if (compare_id(&event->id, &id)) {
                     event->event_name = event_name;
                     event->event_description = event_description;
 
@@ -340,17 +318,15 @@ void em_store_event_description(uint32_t original_network_id, uint32_t transport
 }
 
 void em_show_whole_EPG() {
-    struct list_node *service_entry, *event_entry, *content_description_entry;
+    struct list_node *service_entry, *event_entry;
     struct Service *service;
     struct Event *event;
-    struct ContentDescription *content_description;
-
-    int i;
 
     service = NULL;
     event = NULL;
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
+
         em_show_service(service);
 
         list_for_each(event_entry, service->event_list) {
@@ -366,10 +342,9 @@ void em_show_whole_EPG() {
 }
 
 void em_show_service_EPG(char *service_name) {
-    struct list_node *service_entry, *event_entry, *content_description_entry;
+    struct list_node *service_entry, *event_entry;
     struct Service *service;
     struct Event *event;
-    struct ContentDescription *content_description;
 
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
@@ -438,7 +413,7 @@ void em_show_now_EPG(char *now_time) {
 }
 
 void em_show_service(struct Service *service) {
-    printf("SERVICE_IDENTIFIER: (%d, %d, %d)\n", service->original_network_id, service->transport_stream_id, service->service_id);
+    printf("SERVICE_IDENTIFIER: (%d, %d, %d)\n", service->id.original_network_id, service->id.transport_stream_id, service->id.service_id);
     printf("SERVICE_NAME: %s\n", service->service_name);
 }
 
@@ -446,7 +421,7 @@ void em_show_event(struct Event *event) {
     struct list_node *content_description_entry;
     struct ContentDescription *content_description;
 
-    printf("EVENT_IDENTIFIER: (%d, %d, %d, %d)\n", event->original_network_id, event->transport_stream_id, event->service_id, event->event_id);
+    printf("EVENT_IDENTIFIER: (%d, %d, %d, %d)\n", event->id.original_network_id, event->id.transport_stream_id, event->id.service_id, event->id.event_id);
     printf("EVENT_NAME: %s\n", event->event_name);
 
     printf("CONTENT_DESCRIPTION: ");

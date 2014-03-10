@@ -21,8 +21,9 @@ char content_description_table[0xf][0xf+1][MAX_CONTENT_DESCRIPTION_LENGTH] =
 };
 
 void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
-    uint32_t table_id, table_version_number, section_version_number;
-    uint32_t original_network_id, transport_stream_id, service_id;
+    struct Identifier id;
+    uint32_t table_id;
+    uint32_t table_version_number, section_version_number;
     uint32_t descriptor_tag, descriptor_length, descriptors_loop_length;
     uint32_t service_provider_name_length, service_name_length;
     char *service_name = NULL;
@@ -32,13 +33,15 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
     if (table_id != ACTUAL_SDT_ID)
         return;
 
-    section_version_number = get_bits(42, 5, section);
-    transport_stream_id = get_bits(24, 16, section);
-    original_network_id = get_bits(64, 16, section);
+    id = init_id();
+    id.transport_stream_id = get_bits(24, 16, section);
+    id.original_network_id = get_bits(64, 16, section);
 
     /*
     section_number = get_bits(48, 8, section);
     last_section_number = get_bits(56, 8, section);
+    section_version_number = get_bits(42, 5, section);
+
     table_version_number = em_get_SDT_version_number(original_network_id, transport_stream_id, service_id, table_id);
 
     if (table_version_number != (uint32_t)-1 && section_version_number != (table_version_number + 1) % 32)
@@ -50,7 +53,7 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
     section += 11;
     section_bytes_scaned = 11;
     while (section_bytes_scaned < section_length - 4) {
-        service_id = get_bits(0, 16, section);
+        id.service_id = get_bits(0, 16, section);
         descriptors_loop_length = get_bits(28, 12, section);
 
         section += 5;
@@ -80,13 +83,14 @@ void sa_analyze_SDT_section(uint8_t *section, uint32_t section_length) {
 
         section_bytes_scaned += 5 + descriptors_loop_length;
 
-        em_store_service(original_network_id, transport_stream_id, service_id, service_name);
+        em_store_service(id, service_name);
     }
 }
 
 void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
-    uint32_t table_id, section_version_number, table_version_number;
-    uint32_t original_network_id, transport_stream_id, service_id, event_id;
+    struct Identifier id;
+    uint32_t table_id;
+    uint32_t section_version_number, table_version_number;
     uint8_t section_number, last_section_number;
 
     uint8_t descriptor_tag, descriptor_length;
@@ -109,15 +113,16 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
     if (table_id < MIN_ACTUAL_EVENT_SCHEDULE_TABLE_ID || table_id > MAX_ACTUAL_EVENT_SCHEDULE_TABLE_ID)
         return;
 
-    section_version_number = get_bits(42, 5, section);
+    id = init_id();
 
-    service_id = get_bits(24, 16, section);
-    transport_stream_id = get_bits(64, 16, section);
-    original_network_id = get_bits(80, 16, section);
+    id.service_id = get_bits(24, 16, section);
+    id.transport_stream_id = get_bits(64, 16, section);
+    id.original_network_id = get_bits(80, 16, section);
 
     /*
     section_number = get_bits(48, 8, section);
     last_section_number = get_bits(56, 8, section);
+    section_version_number = get_bits(42, 5, section);
     table_version_number = em_get_EIT_version_number(original_network_id, transport_stream_id, service_id, table_id);
 
     if (table_version_number != (uint32_t)-1 && section_version_number != (table_version_number + 1) % 32)
@@ -129,7 +134,7 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
     section += 14;
     section_bytes_scaned = 14;
     while (section_bytes_scaned < section_length - 4) {
-        event_id = get_bits(0, 16, section);
+        id.event_id = get_bits(0, 16, section);
         start_time = get_bits(16, 40, section);
         duration = get_bits(56, 24, section);
         event_name = NULL;
@@ -175,7 +180,7 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
                     descriptor_data_bytes_scaned += 2;
                 }
 
-                em_store_content_description(original_network_id, transport_stream_id, service_id, event_id, content_description_list);
+                em_store_content_description(id, content_description_list);
 
                 section += 2 + descriptor_length;
             } else if (descriptor_tag == SHORT_EVENT_DESCRIPTOR_TAG) {
@@ -193,7 +198,7 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
                 memcpy(event_description, section, text_length);
                 event_description[text_length] = '\0';
 
-                em_store_event_description(original_network_id, transport_stream_id, service_id, event_id, event_name, event_description);
+                em_store_event_description(id, event_name, event_description);
 
                 section += text_length;
             } else {
@@ -206,5 +211,5 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
         section_bytes_scaned += 12 + descriptors_loop_length;
     }
 
-    em_store_event(original_network_id, transport_stream_id, service_id, event_id, start_time, duration);
+    em_store_event(id, start_time, duration);
 }
