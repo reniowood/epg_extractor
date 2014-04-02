@@ -287,6 +287,8 @@ void em_show_whole_EPG() {
 
     service = NULL;
     event = NULL;
+
+    printf("[\n");
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
 
@@ -298,10 +300,19 @@ void em_show_whole_EPG() {
             if (event->event_name) {
                 em_show_event(event);
             }
+
+            if (event_entry->next != service->event_list)
+                putchar(',');
+            putchar('\n');
         }
 
+        printf("\t]\n");
+        printf("\t}");
+        if (service_entry->next != service_list)
+            putchar(',');
         putchar('\n');
     }
+    printf("]\n");
 }
 
 void em_show_service_EPG(char *service_name) {
@@ -363,42 +374,47 @@ void em_show_now_EPG(char *now_time) {
 }
 
 void em_show_service(struct Service *service) {
-    printf("{\n");
-    printf("\t\"service_identifier\": {\n");
-    printf("\t\t\"original_network_id\": %d,\n", service->id.original_network_id);
-    printf("\t\t\"transport_stream_id\": %d,\n", service->id.transport_stream_id);
-    printf("\t\t\"service_id\": %d,\n", service->id.service_id);
-    printf("\t},\n");
-    printf("\t\"service_name\": \"%s\"\n", service->service_name);
-    printf("}\n");
+    printf("\t{\n");
+    printf("\t\t\"identifier\": {\n");
+    printf("\t\t\t\"original_network_id\": %d,\n", service->id.original_network_id);
+    printf("\t\t\t\"transport_stream_id\": %d,\n", service->id.transport_stream_id);
+    printf("\t\t\t\"service_id\": %d\n", service->id.service_id);
+    printf("\t\t},\n");
+    printf("\t\t\"name\": \"%s\",\n", service->service_name);
+    printf("\t\t\"events\": [\n");
 }
 
 void em_show_event(struct Event *event) {
     struct list_node *content_description_entry;
     struct ContentDescription *content_description;
 
-    printf("{\n");
-    printf("\t\"event_identifier\": {\n");
-    printf("\t\t\"original_network_id\": %d,\n", event->id.original_network_id);
-    printf("\t\t\"transport_stream_id\": %d,\n", event->id.transport_stream_id);
-    printf("\t\t\"service_id\": %d,\n", event->id.service_id);
-    printf("\t\t\"event_id\": %d,\n", event->id.event_id);
-    printf("\t},\n");
-    printf("\t\"event_name\": \"%s\",\n", event->event_name);
+    printf("\t\t{\n");
+    printf("\t\t\t\"identifier\": {\n");
+    printf("\t\t\t\t\"original_network_id\": %d,\n", event->id.original_network_id);
+    printf("\t\t\t\t\"transport_stream_id\": %d,\n", event->id.transport_stream_id);
+    printf("\t\t\t\t\"service_id\": %d,\n", event->id.service_id);
+    printf("\t\t\t\t\"event_id\": %d\n", event->id.event_id);
+    printf("\t\t\t},\n");
+    printf("\t\t\t\"name\": \"%s\",\n", event->event_name);
 
-    printf("\t\"content_description\": [\n");
+    printf("\t\t\t\"content_description\": [\n");
     list_for_each(content_description_entry, event->content_description_list) {
         content_description = get_data(content_description_entry, struct ContentDescription);
-        printf("\t\t{\"level_1\": \"%s\", \"level_2\": \"%s\"},\n", content_description->content_description_level_1, content_description->content_description_level_2);
+        printf("\t\t\t\t{\"level_1\": \"%s\", \"level_2\": \"%s\"}", content_description->content_description_level_1, content_description->content_description_level_2);
+        if (content_description_entry->next != event->content_description_list)
+            putchar(',');
+        putchar('\n');
     }
-    printf("\t],\n");
+    printf("\t\t\t],\n");
 
-    printf("\t\"time\": {\n");
-    printf("\t\t\"%d-%d-%d\", ", event->start.year, event->start.month, event->start.day);
-    printf("\"%02d:%02d:%02d\", \"%02d:%02d:%02d\", \"%02d:%02d:%02d\"\n", event->start.hour, event->start.minute, event->start.second, event->end.hour, event->end.minute, event->end.second, event->duration.hour, event->duration.minute, event->duration.second);
-    printf("\t},\n");
+    printf("\t\t\t\"time\": {\n");
+    printf("\t\t\t\t\"date\": \"%d-%d-%d\",\n", event->start.year, event->start.month, event->start.day);
+    printf("\t\t\t\t\"start\": \"%02d:%02d:%02d\",\n", event->start.hour, event->start.minute, event->start.second);
+    printf("\t\t\t\t\"end\": \"%02d:%02d:%02d\",\n", event->end.hour, event->end.minute, event->end.second);
+    printf("\t\t\t\t\"duration\": \"%02d:%02d:%02d\"\n", event->duration.hour, event->duration.minute, event->duration.second);
+    printf("\t\t\t},\n");
 
-    printf("\t\"event_description\": \"%s\"\n", event->event_description);
+    printf("\t\t\t\"description\": \"%s\"\n", event->event_description);
 
-    printf("}\n");
+    printf("\t\t}");
 }
