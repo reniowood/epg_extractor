@@ -1,0 +1,13 @@
+<h2>EPG</h2>
+<ul id="servicesList">
+    <li ng-repeat="service in services">
+        <h2>{{service.name}}</h2>
+        <ol id="eventsList">
+            <li ng-repeat="event in service.events">
+                <h3>{{event.name}}</h3>
+                <span>{{event.time.start}} - {{event.time.end}}</span>
+                <span>{{event.content_description.level_1}}</span>
+            </li>
+        </ol>
+    </li>
+</ul>
