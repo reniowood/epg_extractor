@@ -9,3 +9,6 @@
 
 # VI swap file
 *.swp
+
+# node.js modules
+node_modules/*
