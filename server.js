@@ -11,7 +11,7 @@ app.configure(function () {
     app.use(app.router);
 });
 
-app.get('/getEPG/:TSFileName', function (req, res) {
+app.get('/showEPG/:TSFileName', function (req, res) {
     var extractor = cp.spawn('extractor/extractor.out', [req.params.TSFileName]);
     var EPGJSONData = '';
 
@@ -26,10 +26,6 @@ app.get('/getEPG/:TSFileName', function (req, res) {
     extractor.on('close', function (code) {
         res.send(JSON.parse(EPGJSONData));
     });
-});
-
-app.get('/', function (req, res) {
-    res.redirect('/viewer.html');
 });
 
 app.listen(8888);

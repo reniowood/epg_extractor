@@ -6,15 +6,18 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
         controller: 'LoadTSFileCtrl',
         templateUrl: '/templates/upload_ts.html'
     }).
-    when('/showEPG', {
+    when('/showEPG/:TSFileName', {
         controller: 'ShowEPGCtrl',
+        resolve: {
+            EPG: function(EPGLoader) {
+                return EPGLoader();
+            }
+        },
         templateUrl: '/templates/show_epg.html'
     }).
     otherwise({
         redirectTo: '/'
     });
-
-    $locationProvider.html5Mode(true);
 }]);
 
 app.controller('LoadTSFileCtrl', ['$scope', '$location', '$http', 'EPG',
@@ -22,11 +25,8 @@ app.controller('LoadTSFileCtrl', ['$scope', '$location', '$http', 'EPG',
         $scope.TSFileName = '';
 
         $scope.loadTSFile = function () {
-            $http.get('/getEPG/' + $scope.TSFileName).then(function (response) {
-                EPG.services = response.data;
-                console.log(EPG.services);
-
-                $location.path('/showEPG');
+            $scope.services = EPG.query({TSFileName: $scope.TSFileName}, function (EPG) {
+                $location.path('/showEPG/' + $scope.TSFileName);
             });
         };
     }
@@ -34,7 +34,7 @@ app.controller('LoadTSFileCtrl', ['$scope', '$location', '$http', 'EPG',
 
 app.controller('ShowEPGCtrl', ['$scope', 'EPG',
     function ($scope, EPG) {
-        $scope.services = EPG.services;
+        $scope.services = EPG;
         console.log($scope.services);
     }
 ]);
