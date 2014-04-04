@@ -1,6 +1,6 @@
 #include "section_analyzer.h"
 
-char content_description_table[0xf][0xf+1][MAX_CONTENT_DESCRIPTION_LENGTH] = 
+char content_description_table[0xf+1][0xf+1][MAX_CONTENT_DESCRIPTION_LENGTH] = 
 {
     {"undefined", "undefined", },
     {"Movie/Drama", "general", "detective/thriller", "advanture/western/war", "science fiction/fantasy/horror", "comedy", "soap/melodrama/folkloric", "romance", "serious/classical/religious/historical movie/drama", "adult movie/drama", },
@@ -203,12 +203,14 @@ void sa_analyze_EIT_section(uint8_t *section, uint32_t section_length) {
 
                     content_description->content_description_level_1 = (char *)malloc(strlen(content_description_table[content_nibble_level_1][0]) + 1);
                     strcpy(content_description->content_description_level_1, content_description_table[content_nibble_level_1][0]);
+                    content_description->content_description_level_1[strlen(content_description_table[content_nibble_level_1][0])] = '\0';
 
                     if (content_description_table[content_nibble_level_1][content_nibble_level_2 + 1] == 0)
                         content_description->content_description_level_2 = NULL;
                     else {
                         content_description->content_description_level_2 = (char *)malloc(strlen(content_description_table[content_nibble_level_1][content_nibble_level_2 + 1]) + 1);
                         strcpy(content_description->content_description_level_2, content_description_table[content_nibble_level_1][content_nibble_level_2 + 1]);
+                        content_description->content_description_level_2[strlen(content_description_table[content_nibble_level_1][content_nibble_level_2 + 1])] = '\0';
                     }
 
                     add_data_tail(content_description, content_description_list);
