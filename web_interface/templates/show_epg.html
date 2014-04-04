@@ -1,13 +1,22 @@
-<h2>EPG</h2>
-<ul id="servicesList">
-    <li ng-repeat="service in services">
+<div class="dates">
+    <div ng-repeat="date in dates">
+        <div class="date">{{date}}</div>
+    </div>
+</div>
+<div class="hours">
+    <div ng-repeat="date in dates">
+        <div ng-repeat="hour in hours">
+            <div class="hour">{{hour}}</div>
+        </div>
+    </div>
+</div>
+<div class="service" ng-repeat="service in services">
+    <div class="name">
         <h2>{{service.name}}</h2>
-        <ol id="eventsList">
-            <li ng-repeat="event in service.events">
-                <h3>{{event.name}}</h3>
-                <span>{{event.time.start}} - {{event.time.end}}</span>
-                <span>{{event.content_description.level_1}}</span>
-            </li>
-        </ol>
-    </li>
-</ul>
+    </div>
+    <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width, 'left': event.left}">
+        <div class="name">
+            <h3>{{event.name}}</h3>
+        </div>
+    </div>
+</div>
