@@ -297,8 +297,8 @@ void em_show_whole_EPG() {
     event = NULL;
 
     printf("{\n");
-    printf("\t\"start_date\": \"%d-%d-%d\",\n", start_date.year, start_date.month, start_date.day);
-    printf("\t\"end_date\": \"%d-%d-%d\",\n", end_date.year, end_date.month, end_date.day);
+    printf("\t\"start_date\": \"%d/%d/%d\",\n", start_date.year, start_date.month, start_date.day);
+    printf("\t\"end_date\": \"%d/%d/%d\",\n", end_date.year, end_date.month, end_date.day);
     printf("\t\"services\": \n");
     printf("\t\t[\n");
     list_for_each(service_entry, service_list) {
@@ -421,7 +421,7 @@ void em_show_event(struct Event *event) {
     printf("\t\t\t\t],\n");
 
     printf("\t\t\t\t\"time\": {\n");
-    printf("\t\t\t\t\t\"date\": \"%d-%d-%d\",\n", event->start.year, event->start.month, event->start.day);
+    printf("\t\t\t\t\t\"date\": \"%d/%d/%d\",\n", event->start.year, event->start.month, event->start.day);
     printf("\t\t\t\t\t\"start\": \"%02d:%02d:%02d\",\n", event->start.hour, event->start.minute, event->start.second);
     printf("\t\t\t\t\t\"end\": \"%02d:%02d:%02d\",\n", event->end.hour, event->end.minute, event->end.second);
     printf("\t\t\t\t\t\"duration\": \"%02d:%02d:%02d\"\n", event->duration.hour, event->duration.minute, event->duration.second);

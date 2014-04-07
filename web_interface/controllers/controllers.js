@@ -39,8 +39,8 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData',
         $scope.end_date = new Date(EPGData.end_date);
         $scope.services = EPGData.services;
 
-        for (var i in $scope.services) {
-            for (var j in $scope.services[i].events) {
+        for (var i=0; i<$scope.services.length; ++i) {
+            for (var j=0; j<$scope.services[i].events.length; ++j) {
                 var event = $scope.services[i].events[j];
                 duration = event.time.duration.split(':');
                 duration_minutes = parseInt(duration[0]) * 60 + parseInt(duration[1]);
@@ -55,8 +55,7 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData',
         var date = $scope.start_date;
         $scope.dates = [];
         while (date <= $scope.end_date) {
-            console.log(date);
-            $scope.dates.push((date.getMonth() + 1).toString() + "-" + date.getDate());
+            $scope.dates.push((date.getMonth() + 1).toString() + "/" + date.getDate());
 
             date = new Date(date);
             date.setDate(date.getDate() + 1);
