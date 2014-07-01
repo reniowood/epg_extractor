@@ -30,40 +30,33 @@ app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource',
     }
 ]);
 
-app.controller('ShowEPGCtrl', ['$scope', 'EPGData',
-    function ($scope, EPGData) {
-        var duration, duration_minutes;
-        var start, start_minutes;
+app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 
+    function ($scope, EPGData, EPG) {
+        var start_date = new Date(EPGData.start_date);
+        var end_date = new Date(EPGData.end_date);
 
-        $scope.start_date = new Date(EPGData.start_date);
-        $scope.end_date = new Date(EPGData.end_date);
+        $scope.selected_date = {};
+        $scope.selected_date.year = start_date.getFullYear();
+        $scope.selected_date.month = start_date.getMonth();
+        $scope.selected_date.day = start_date.getDate();
+
         $scope.services = EPGData.services;
+        
+        $scope.show_EPG = function () {
+            var selected_date = new Date(Number($scope.selected_date.year), Number($scope.selected_date.month), Number($scope.selected_date.day));
 
-        for (var i=0; i<$scope.services.length; ++i) {
-            for (var j=0; j<$scope.services[i].events.length; ++j) {
-                var event = $scope.services[i].events[j];
-                duration = event.time.duration.split(':');
-                duration_minutes = parseInt(duration[0]) * 60 + parseInt(duration[1]);
-                start = event.time.start.split(':');
-                start_minutes = parseInt(start[0]) * 60 + parseInt(start[1]);
+            $scope.EPG_dates = EPG.get_dates_between(selected_date, selected_date);
+            $scope.EPG_hours = EPG.get_hours_between(0, 24);
 
-                event.width = 400.0 / 60 * duration_minutes - 7;
-                event.left = 212 + (new Date(event.time.date).getTime() - $scope.start_date.getTime()) / (1000.0*60*60*24) * (400 * 24) + (400 * (start_minutes / 60) - 2);
-            }
-        }
+            EPG.generate_EPG($scope.services, selected_date);
+        };
 
-        var date = $scope.start_date;
-        $scope.dates = [];
-        while (date <= $scope.end_date) {
-            $scope.dates.push((date.getMonth() + 1).toString() + "/" + date.getDate());
+        available_dates = EPG.get_available_date(start_date, end_date);
 
-            date = new Date(date);
-            date.setDate(date.getDate() + 1);
-        }
+        $scope.available_years = available_dates.available_years;
+        $scope.available_months = available_dates.available_months;
+        $scope.available_days = available_dates.available_days;
 
-        $scope.hours = [];
-        for (var i=0; i<24; ++i) {
-            $scope.hours.push(i);
-        }
+        $scope.show_EPG();
     }
 ]);

@@ -1,22 +1,32 @@
+<div>
+    <span>Select the date: </span>
+    <form>
+        <select ng-model="selected_date.year" ng-options="available_year for available_year in available_years" ng-change="show_EPG()"></select>
+        /
+        <select ng-model="selected_date.month" ng-options="available_month+1 for available_month in available_months" ng-change="show_EPG()"></select>
+        /
+        <select ng-model="selected_date.day" ng-options="available_day for available_day in available_days" ng-change="show_EPG()"></select>
+    </form>
+</div>
 <div class="dates">
-    <div ng-repeat="date in dates">
-        <div class="date">{{date}}</div>
+    <div ng-repeat="date in EPG_dates">
+        <div class="date" ng-bind="date"></div>
     </div>
 </div>
 <div class="hours">
-    <div ng-repeat="date in dates">
-        <div ng-repeat="hour in hours">
-            <div class="hour">{{hour}}</div>
+    <div ng-repeat="date in EPG_dates">
+        <div ng-repeat="hour in EPG_hours">
+            <div class="hour" ng-bind="hour"></div>
         </div>
     </div>
 </div>
 <div class="service" ng-repeat="service in services">
     <div class="name">
-        <h2>{{service.name}}</h2>
+        <h2 ng-bind="service.name"></h2>
     </div>
-    <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width, 'left': event.left}">
+    <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width, 'left': event.left}" ng-show="event.show">
         <div class="name">
-            <h3>{{event.name}}</h3>
+            <h3 ng-bind="event.name"></h3>
         </div>
     </div>
 </div>
