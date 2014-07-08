@@ -113,6 +113,7 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         };
 
         $scope.update_EPG = function () {
+            $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
             set_EPG_style($scope.EPG, $scope.EPG_start_date, $scope.EPG_end_date);
         };
         $scope.backward = function () {
