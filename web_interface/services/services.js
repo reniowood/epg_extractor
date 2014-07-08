@@ -23,15 +23,16 @@ services.factory('EPG', function () {
         /*
          * start와 end 사이에 방송되는 event들을 모두 구한다.
          */
-        generate_EPG : function (services) {
-            var EPG = [];
+        generate_EPG : function (EPG_data, start_date, end_date) {
+            var EPG = {};
+            var services = [];
 
-            for (var i=0; i<services.length; ++i) {
+            for (var i=0; i<EPG_data.length; ++i) {
                 var service = {};
                 var events = [];
 
-                for (var j=0; j<services[i].events.length; ++j) {
-                    var event = services[i].events[j];
+                for (var j=0; j<EPG_data[i].events.length; ++j) {
+                    var event = EPG_data[i].events[j];
                     var event_start_date = new Date(event.time.start_date);
                     var event_end_date = new Date(event.time.end_date);
 
@@ -50,11 +51,16 @@ services.factory('EPG', function () {
                     events.push(available_event);
                 }
 
-                service.name = services[i].name;
+                service.name = EPG_data[i].name;
+                service.show = true;
                 service.events = events;
 
-                EPG.push(service);
+                services.push(service);
             }
+
+            EPG.start_date = new Date(start_date);
+            EPG.end_date = new Date(end_date);
+            EPG.services = services;
 
             return EPG;
         }

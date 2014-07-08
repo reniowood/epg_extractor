@@ -64,15 +64,15 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
             return labels;
         };
         var set_EPG_style = function (EPG, start_date, end_date) {
-            for (var i=0; i<EPG.length; ++i) {
+            for (var i=0; i<EPG.services.length; ++i) {
                 if (i >= $scope.EPG_first_service_shown && i < $scope.EPG_first_service_shown + $scope.EPG_max_services) {
-                    EPG[i].show = true;
+                    EPG.services[i].show = true;
                 } else {
-                    EPG[i].show = false;
+                    EPG.services[i].show = false;
                 }
 
-                for (var j=0; j<EPG[i].events.length; ++j) {
-                    var event = EPG[i].events[j];
+                for (var j=0; j<EPG.services[i].events.length; ++j) {
+                    var event = EPG.services[i].events[j];
                     var event_start_date = new Date(event.start_date);
                     var event_end_date = new Date(event.end_date);
 
@@ -107,7 +107,7 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
             $scope.EPG_first_service_shown = 0;
 
             $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
-            $scope.EPG = EPG.generate_EPG(EPGData.services, $scope.EPG_start_date, $scope.EPG_end_date);
+            $scope.EPG = EPG.generate_EPG(EPGData.services, EPGData.start_date, EPGData.end_date);
 
             $scope.update_EPG();
         };
@@ -119,6 +119,10 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         $scope.backward = function () {
             $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
+            if ($scope.EPG_start_date.getTime() < $scope.EPG.start_date.getTime()) {
+                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
+            }
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
 
             $scope.update_EPG();
@@ -126,6 +130,10 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         $scope.forward = function () {
             $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
+            if ($scope.EPG_end_date.getTime() > $scope.EPG.end_date.getTime()) {
+                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
+            }
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
 
             $scope.update_EPG();
@@ -140,8 +148,8 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         };
         $scope.next_service = function () {
             $scope.EPG_first_service_shown++;
-            if ($scope.EPG_first_service_shown === $scope.EPG.length - $scope.EPG_max_services) {
-                $scope.EPG_first_service_shown = $scope.EPG.length - $scope.EPG_max_services - 1;
+            if ($scope.EPG_first_service_shown === $scope.EPG.services.length - $scope.EPG_max_services + 1) {
+                $scope.EPG_first_service_shown = $scope.EPG.services.length - $scope.EPG_max_services;
             } else {
                 $scope.update_EPG();
             }
