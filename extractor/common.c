@@ -103,15 +103,56 @@ void get_hms(struct Date *date, uint64_t time) {
 }
 
 void add_date(struct Date *result, struct Date *date_1, struct Date *date_2) {
+    int new_day;
+
     result->second = date_1->second + date_2->second;
     result->minute = date_1->minute + date_2->minute + result->second / 60;
-    result->hour = date_1->hour + date_2->hour + result->minute / 60;
-
-    result->hour %= 24;
-    result->minute %= 60;
     result->second %= 60;
-
+    result->hour = date_1->hour + date_2->hour + result->minute / 60;
+    result->minute %= 60;
     result->day = date_1->day + result->hour / 24;
+    result->hour %= 24;
     result->month = date_1->month;
     result->year = date_1->year;
+
+    while (new_day = is_illegal_date(result->year, result->month, result->day)) {
+        result->day = new_day;
+        result->month++;
+        if (result->month == 13) {
+            result->month = 1;
+            result->year++;
+        }
+    }
+}
+
+int is_illegal_date(int year, int month, int day) {
+    if ((day > 31) &&
+        ((month == 1) ||
+         (month == 3) ||
+         (month == 5) ||
+         (month == 7) ||
+         (month == 8) ||
+         (month == 10) ||
+         (month == 12))) {
+        return day - 31;
+    } else if ((day > 30) &&
+               ((month == 2) ||
+                (month == 4) ||
+                (month == 6) ||
+                (month == 9) ||
+                (month == 11))) {
+        return day - 30;
+    } else if (month == 2) {
+        if ((day > 29) &&
+            (year % 4 == 0) &&
+            (year % 100 != 0) ||
+            (year % 400 == 0)) {
+            return day - 29;
+        } else if ((day > 28) &&
+                   (year % 4 != 0)) {
+            return day - 28;
+        }
+    }
+
+    return 0;
 }
