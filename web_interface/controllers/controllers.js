@@ -20,6 +20,16 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
     });
 }]);
 
+app.controller('Navigator', ['$scope', 'NavigatorService', 
+    function ($scope, navigator_service) {
+        $scope.KEY_CODE = navigator_service.KEY_CODE;
+
+        $scope.navigate = function (keycode) {
+            navigator_service.navigate(keycode);
+        };
+    }
+]);
+
 app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource',
     function ($scope, $location, EPGResource, EPG) {
         $scope.TSFileName = '';
@@ -30,8 +40,8 @@ app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource',
     }
 ]);
 
-app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 
-    function ($scope, EPGData, EPG) {
+app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService', 
+    function ($scope, EPGData, EPG, navigator_service) {
         var get_time_labels = function (start_date, end_date) {
             var labels = [];
 
@@ -88,19 +98,37 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG',
             $scope.EPG = EPG.generate_EPG(EPGData.services, $scope.EPG_start_date, $scope.EPG_end_date);
             set_EPG_style($scope.EPG);
         };
-        $scope.navigate_EPG = function ($event) {
-            console.log('haha');
-        };
-        $scope.back = function () {
+        $scope.backward = function () {
             $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+            $scope.update_EPG();
         };
         $scope.forward = function () {
             $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+            $scope.update_EPG();
         };
+
+        $scope.$on('NavigatorMsg', function () {
+            switch (navigator_service.keycode) {
+                case navigator_service.KEY_CODE.LEFT:
+                    console.log('LEFT');
+                    $scope.backward();
+                    break;
+                case navigator_service.KEY_CODE.RIGHT:
+                    console.log('RIGHT');
+                    $scope.forward();
+                    break;
+                case navigator_service.KEY_CODE.UP:
+                    console.log('UP');
+                    break;
+                case navigator_service.KEY_CODE.DOWN:
+                    console.log('DOWN');
+                    break;
+            }
+        });
 
         init_EPG();
     }

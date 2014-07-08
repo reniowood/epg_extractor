@@ -64,3 +64,24 @@ services.factory('EPG', function () {
         }
     };
 });
+
+services.factory('NavigatorService', function ($rootScope) {
+    var navigator_service = {};
+
+    navigator_service.keycode = '';
+    navigator_service.KEY_CODE = {
+        LEFT: 0,
+        DOWN: 1,
+        UP: 2,
+        RIGHT: 3
+    };
+    navigator_service.navigate = function (keycode) {
+        this.keycode = keycode;
+
+        console.log('NavigatorService: navigate(keycode = ' + keycode + ')');
+
+        $rootScope.$broadcast('NavigatorMsg');
+    };
+
+    return navigator_service;
+});

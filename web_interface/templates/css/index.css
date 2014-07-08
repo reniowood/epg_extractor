@@ -1,0 +1,11 @@
+body {
+    width: 1800px
+}
+
+#main {
+    float: left;
+}
+
+#navigator {
+    float: right;
+}
