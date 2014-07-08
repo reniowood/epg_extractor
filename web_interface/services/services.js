@@ -23,10 +23,11 @@ services.factory('EPG', function () {
         /*
          * start와 end 사이에 방송되는 event들을 모두 구한다.
          */
-        generate_EPG : function (services, start, end) {
-            var EPG = {};
+        generate_EPG : function (services) {
+            var EPG = [];
 
             for (var i=0; i<services.length; ++i) {
+                var service = {};
                 var events = [];
 
                 for (var j=0; j<services[i].events.length; ++j) {
@@ -34,30 +35,25 @@ services.factory('EPG', function () {
                     var event_start_date = new Date(event.time.start_date);
                     var event_end_date = new Date(event.time.end_date);
 
-                    if (!(event_start_date.getTime() <= start.getTime() && event_end_date.getTime() <= start.getTime()) && !(event_start_date.getTime() >= end.getTime() && event_end_date.getTime() >= end.getTime())) {
-                        var duration = event.time.duration.split(':');
-                        var duration_in_hour = parseInt(duration[0]) + parseInt(duration[1]) / 60;
+                    var duration = event.time.duration.split(':');
+                    var duration_in_hour = parseInt(duration[0]) + parseInt(duration[1]) / 60;
 
-                        var available_event = {
-                            'name': event.name,
-                            'start_date': event_start_date,
-                            'end_date': event_end_date,
-                            'duration': duration_in_hour,
-                            'description': event.description
-                        };
+                    var available_event = {
+                        'name': event.name,
+                        'start_date': event_start_date,
+                        'end_date': event_end_date,
+                        'duration': duration_in_hour,
+                        'description': event.description,
+                        'show': true
+                    };
 
-                        events.push(available_event);
-                    }
+                    events.push(available_event);
                 }
 
-                if (events.length > 0) {
-                    var service = {};
+                service.name = services[i].name;
+                service.events = events;
 
-                    service.name = services[i].name;
-                    service.events = events;
-
-                    EPG[service.name] = service;
-                }
+                EPG.push(service);
             }
 
             return EPG;

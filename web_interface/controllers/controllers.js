@@ -63,11 +63,22 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
             return labels;
         };
-        var set_EPG_style = function (EPG) {
-            for (var key in EPG) {
-                if (EPG.hasOwnProperty(key)) {
-                    for (var j=0; j<EPG[key].events.length; ++j) {
-                        var event = EPG[key].events[j];
+        var set_EPG_style = function (EPG, start_date, end_date) {
+            for (var i=0; i<EPG.length; ++i) {
+                if (i >= $scope.EPG_first_service_shown && i < $scope.EPG_first_service_shown + $scope.EPG_max_services) {
+                    EPG[i].show = true;
+                } else {
+                    EPG[i].show = false;
+                }
+
+                for (var j=0; j<EPG[i].events.length; ++j) {
+                    var event = EPG[i].events[j];
+                    var event_start_date = new Date(event.start_date);
+                    var event_end_date = new Date(event.end_date);
+
+                    if (!(event_start_date.getTime() <= start_date.getTime() && event_end_date.getTime() <= start_date.getTime()) && !(event_start_date.getTime() >= end_date.getTime() && event_end_date.getTime() >= end_date.getTime())) {
+                        event.show = true;
+
                         var hour_from_EPG_start = (event.start_date.getTime() - $scope.EPG_start_date.getTime()) / (1000 * 60 * 60);
 
                         event.left = hour_from_EPG_start;
@@ -78,37 +89,61 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
                             event.width -= ($scope.EPG_start_date.getTime() - event.start_date.getTime()) / (1000 * 60 * 60);
                         if (event.end_date.getTime() > $scope.EPG_end_date.getTime())
                             event.width -= (event.end_date.getTime() - $scope.EPG_end_date.getTime()) / (1000 * 60 * 60);
+                    } else {
+                        event.show = false;
                     }
                 }
             }
         };
         var init_EPG = function () {
-            $scope.EPG_length = 6; // hour(s) 
+            $scope.EPG_length = 4; // hour(s) 
+            $scope.EPG_hour_width = 300;
+            $scope.EPG_max_services = 5;
+
             $scope.EPG_start_date = new Date(EPGData.start_date);
             $scope.EPG_end_date = new Date(EPGData.start_date);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
-            $scope.EPG_hour_width = 200;
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+            $scope.EPG_first_service_shown = 0;
+
+            $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
+            $scope.EPG = EPG.generate_EPG(EPGData.services, $scope.EPG_start_date, $scope.EPG_end_date);
 
             $scope.update_EPG();
         };
 
         $scope.update_EPG = function () {
-            $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
-            $scope.EPG = EPG.generate_EPG(EPGData.services, $scope.EPG_start_date, $scope.EPG_end_date);
-            set_EPG_style($scope.EPG);
+            set_EPG_style($scope.EPG, $scope.EPG_start_date, $scope.EPG_end_date);
         };
         $scope.backward = function () {
             $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+
             $scope.update_EPG();
         };
         $scope.forward = function () {
             $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
             $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+
             $scope.update_EPG();
+        };
+        $scope.prev_service = function () {
+            $scope.EPG_first_service_shown--;
+            if ($scope.EPG_first_service_shown < 0) {
+                $scope.EPG_first_service_shown = 0;
+            } else {
+                $scope.update_EPG();
+            }
+        };
+        $scope.next_service = function () {
+            $scope.EPG_first_service_shown++;
+            if ($scope.EPG_first_service_shown === $scope.EPG.length - $scope.EPG_max_services) {
+                $scope.EPG_first_service_shown = $scope.EPG.length - $scope.EPG_max_services - 1;
+            } else {
+                $scope.update_EPG();
+            }
         };
 
         $scope.$on('NavigatorMsg', function () {
@@ -123,9 +158,11 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
                     break;
                 case navigator_service.KEY_CODE.UP:
                     console.log('UP');
+                    $scope.prev_service();
                     break;
                 case navigator_service.KEY_CODE.DOWN:
                     console.log('DOWN');
+                    $scope.next_service();
                     break;
             }
         });
