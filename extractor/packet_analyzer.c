@@ -52,8 +52,6 @@ void pa_analyze_packet(uint8_t *TS_packet) {
                 section_length += 3; /* add length until section_length field */
 
                 section = (uint8_t *)malloc(section_length);
-                memset(section, 0, section_length);
-
                 if (section_length >= TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index)
                     memcpy(section, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
                 else
@@ -65,8 +63,6 @@ void pa_analyze_packet(uint8_t *TS_packet) {
                 section_length += 3; /* add length until section_length field */
 
                 section = (uint8_t *)malloc(section_length);
-                memset(section, 0, section_length);
-
                 memcpy(section, TS_packet + TS_PACKET_HEADER_SIZE + payload_index, TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index);
 
                 section_filled_length = TS_PACKET_SIZE - TS_PACKET_HEADER_SIZE - payload_index;

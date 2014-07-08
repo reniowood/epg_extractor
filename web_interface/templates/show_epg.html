@@ -1,32 +1,30 @@
-<div>
-    <span>Select the date: </span>
-    <form>
-        <select ng-model="selected_date.year" ng-options="available_year for available_year in available_years" ng-change="show_EPG()"></select>
-        /
-        <select ng-model="selected_date.month" ng-options="available_month+1 for available_month in available_months" ng-change="show_EPG()"></select>
-        /
-        <select ng-model="selected_date.day" ng-options="available_day for available_day in available_days" ng-change="show_EPG()"></select>
+<div id="control">
+    <form ng-submit="update_EPG()">
+        <button ng-click="back()">◀</button>
+        <button ng-click="forward()">▶</button>
     </form>
 </div>
-<div class="dates">
-    <div ng-repeat="date in EPG_dates">
-        <div class="date" ng-bind="date"></div>
+<div id="labels" ng-style="{'width': EPG_length * EPG_hour_width + 200 + 20}">
+    <div id="now_date" ng-bind="EPG_now_date"></div>
+    <div id="hours">
+        <div ng-repeat="time_label in EPG_time_labels" class="label" ng-style="{'width': time_label.width * EPG_hour_width - 2}" ng-bind="time_label.label"></div>
     </div>
 </div>
-<div class="hours">
-    <div ng-repeat="date in EPG_dates">
-        <div ng-repeat="hour in EPG_hours">
-            <div class="hour" ng-bind="hour"></div>
+<div id="EPG" ng-style="{'width': EPG_length * EPG_hour_width + 200 + 20}">
+    <div id="services">
+        <div class="service" ng-repeat="service in EPG">
+            <div class="name">
+                <h2 ng-bind="service.name"></h2>
+            </div>
         </div>
     </div>
-</div>
-<div class="service" ng-repeat="service in services">
-    <div class="name">
-        <h2 ng-bind="service.name"></h2>
-    </div>
-    <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width, 'left': event.left}" ng-show="event.show">
-        <div class="name">
-            <h3 ng-bind="event.name"></h3>
+    <div id="events" ng-style="{'width': EPG_length * EPG_hour_width}">
+        <div class="service" ng-repeat="service in EPG">
+            <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * EPG_hour_width - 7, 'left': event.left * EPG_hour_width}">
+                <div class="name">
+                    <h3 ng-bind="event.name"></h3>
+                </div>
+            </div>
         </div>
     </div>
 </div>

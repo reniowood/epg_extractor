@@ -9,7 +9,7 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
     when('/showEPG/:TSFileName', {
         controller: 'ShowEPGCtrl',
         resolve: {
-            EPGData: function(EPGLoader) {
+            EPGData: function (EPGLoader) {
                 return EPGLoader();
             }
         },
@@ -32,31 +32,76 @@ app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource',
 
 app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 
     function ($scope, EPGData, EPG) {
-        var start_date = new Date(EPGData.start_date);
-        var end_date = new Date(EPGData.end_date);
+        var get_time_labels = function (start_date, end_date) {
+            var labels = [];
 
-        $scope.selected_date = {};
-        $scope.selected_date.year = start_date.getFullYear();
-        $scope.selected_date.month = start_date.getMonth();
-        $scope.selected_date.day = start_date.getDate();
+            var date = new Date(start_date);
+            while (date < end_date) {
+                var label = (date.getHours().toString().length == 2 ? date.getHours() : ('0' + date.getHours())) + ':' + (date.getMinutes().toString().length == 2 ? data.getMinutes() : ('0' + date.getMinutes()));
+                var next_hour = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours() + 1);
+                if (end_date < next_hour)
+                    next_hour = end_date;
 
-        $scope.services = EPGData.services;
-        
-        $scope.show_EPG = function () {
-            var selected_date = new Date(Number($scope.selected_date.year), Number($scope.selected_date.month), Number($scope.selected_date.day));
+                labels.push({
+                    'label': label,
+                    'width': (next_hour - date) / (1000 * 60 * 60),
+                });
 
-            $scope.EPG_dates = EPG.get_dates_between(selected_date, selected_date);
-            $scope.EPG_hours = EPG.get_hours_between(0, 24);
+                date.setHours(date.getHours() + 1);
+                date.setMinutes(0);
+            }
 
-            EPG.generate_EPG($scope.services, selected_date);
+            return labels;
+        };
+        var set_EPG_style = function (EPG) {
+            for (var key in EPG) {
+                if (EPG.hasOwnProperty(key)) {
+                    for (var j=0; j<EPG[key].events.length; ++j) {
+                        var event = EPG[key].events[j];
+                        var hour_from_EPG_start = (event.start_date.getTime() - $scope.EPG_start_date.getTime()) / (1000 * 60 * 60);
+
+                        event.left = hour_from_EPG_start;
+                        if (event.start_date.getTime() < $scope.EPG_start_date.getTime())
+                            event.left = 0;
+                        event.width = event.duration;
+                        if (event.start_date.getTime() < $scope.EPG_start_date.getTime())
+                            event.width -= ($scope.EPG_start_date.getTime() - event.start_date.getTime()) / (1000 * 60 * 60);
+                        if (event.end_date.getTime() > $scope.EPG_end_date.getTime())
+                            event.width -= (event.end_date.getTime() - $scope.EPG_end_date.getTime()) / (1000 * 60 * 60);
+                    }
+                }
+            }
+        };
+        var init_EPG = function () {
+            $scope.EPG_length = 6; // hour(s) 
+            $scope.EPG_start_date = new Date(EPGData.start_date);
+            $scope.EPG_end_date = new Date(EPGData.start_date);
+            $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            $scope.EPG_hour_width = 200;
+            $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+
+            $scope.update_EPG();
         };
 
-        available_dates = EPG.get_available_date(start_date, end_date);
+        $scope.update_EPG = function () {
+            $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
+            $scope.EPG = EPG.generate_EPG(EPGData.services, $scope.EPG_start_date, $scope.EPG_end_date);
+            set_EPG_style($scope.EPG);
+        };
+        $scope.navigate_EPG = function ($event) {
+            console.log('haha');
+        };
+        $scope.back = function () {
+            $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
+            $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
+            $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+        };
+        $scope.forward = function () {
+            $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
+            $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
+            $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+        };
 
-        $scope.available_years = available_dates.available_years;
-        $scope.available_months = available_dates.available_months;
-        $scope.available_days = available_dates.available_days;
-
-        $scope.show_EPG();
+        init_EPG();
     }
 ]);

@@ -1,9 +1,35 @@
-.service {
-    display: block;
-    margin-top: 10px;
+#EPG {
+    width: 1800px;
+}
 
-    width: 100000px;
+#services {
+    float: left;
+}
+
+#services > .service {
     height: 100px;
+}
+
+#events {
+    float: right;
+
+    margin-left: 10px;
+}
+
+#events > .service {
+    position: relative;
+
+    height: 102px;
+}
+
+.event {
+    position: absolute;
+    overflow: hidden;
+    padding-left: 5px;
+
+    width: 250px;
+    height: 100px;
+    border: 1px solid #000000;
 }
 
 .service > .name {
@@ -16,53 +42,32 @@
     text-align: center;
 }
 
-.event {
-    float: left;
-    position: absolute;
-    overflow: hidden;
-    padding-left: 5px;
-
-    width: 250px;
-    height: 100px;
-    border: 1px solid #000000;
-}
-
 .event > .name {
     margin-top: 30px;
 }
 
-.duration {
-    display: none;
+#labels {
+    width: 1800px;
+    height: 42px;
 }
 
-.dates {
-    margin-left: 202px;
-
-    width: 100000px;
-    height: 30px;
-}
-
-.hours {
-    margin-left: 202px;
-
-    width: 100000px;
-    height: 30px;
-    margin-top: 10px;
-}
-
-.date {
+#now_date {
     float: left;
-    
-    width: 9598px;
+
+    width: 200px;
     height: 30px;
 
     border: 1px solid #000000;
 }
 
-.hour {
-    float: left;
+#hours {
+    float: right;
+}
 
-    width: 398px;
+.label {
+    display: inline-block;
+
+    width: 198px;
     height: 30px;
 
     border: 1px solid #000000;
