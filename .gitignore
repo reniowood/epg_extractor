@@ -12,3 +12,6 @@
 
 # node.js modules
 node_modules/*
+
+# temp file for vim
+*~
