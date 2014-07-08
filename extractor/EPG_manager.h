@@ -28,18 +28,11 @@ struct Event {
     struct list_node node;
 };
 
-struct SDTVersionNumber {
+struct Version {
     struct Identifier id;
 
     uint32_t version_number;
-
-    struct list_node node;
-};
-
-struct EITVersionNumber {
-    struct Identifier id;
-
-    uint32_t version_number;
+    int completed;
 
     struct list_node node;
 };
@@ -47,10 +40,9 @@ struct EITVersionNumber {
 void em_init();
 void em_finish();
 
-uint32_t em_get_SDT_version_number(struct Identifier id, uint32_t table_id);
-uint32_t em_get_EIT_version_number(struct Identifier id, uint32_t table_id);
-void em_set_SDT_version_number(struct Identifier id, uint32_t table_id, uint32_t version_number);
-void em_set_EIT_version_number(struct Identifier id, uint32_t table_id, uint32_t version_number);
+struct Version *em_get_version(struct Identifier id);
+void em_set_version_number(struct Identifier id, uint32_t version_number);
+void em_set_version_completed(struct Identifier id, int completed);
 
 void em_store_service(struct Identifier id, char *service_name);
 void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration);
@@ -66,8 +58,7 @@ void em_show_event(struct Event *event);
 
 struct Date translate_start_time(uint64_t start_time);
 
-struct list_node *SDT_version_number_list;
-struct list_node *EIT_version_number_list;
+struct list_node *version_list;
 struct list_node *service_list;
 
 #endif

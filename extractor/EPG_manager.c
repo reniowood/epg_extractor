@@ -4,41 +4,29 @@ struct Date start_date = {9999, 99, 99, 99, 99, 99};
 struct Date end_date = {0, 0, 0, 0, 0, 0};
 
 void em_init() {
-    SDT_version_number_list = (struct list_node *)malloc(sizeof(struct list_node));
-    EIT_version_number_list = (struct list_node *)malloc(sizeof(struct list_node));
+    version_list = (struct list_node *)malloc(sizeof(struct list_node));
     service_list = (struct list_node *)malloc(sizeof(struct list_node));
 
-    init_list(SDT_version_number_list);
-    init_list(EIT_version_number_list);
+    init_list(version_list);
     init_list(service_list);
 }
 
 void em_finish() {
     struct list_node *entry, *old_entry, *event_entry, *old_event_entry, *content_description_entry, *old_content_description_entry;
-    struct SDTVersionNumber *SDT_version_number;
-    struct EITVersionNumber *EIT_version_number;
+    struct Version *version;
     struct Service *service;
     struct Event *event;
     char *service_name, *event_name, *event_description;
     struct ContentDescription *content_description;
 
-    for (entry=SDT_version_number_list->next; entry!=SDT_version_number_list; ) {
-        SDT_version_number = get_data(entry, struct SDTVersionNumber);
+    for (entry=version_list->next; entry!=version_list; ) {
+        version = get_data(entry, struct Version);
 
         old_entry = entry->next;
-        free(SDT_version_number);
+        free(version);
         entry = old_entry;
     }
-    free(SDT_version_number_list);
-
-    for (entry=EIT_version_number_list->next; entry!=EIT_version_number_list; ) {
-        EIT_version_number = get_data(entry, struct EITVersionNumber);
-
-        old_entry = entry->next;
-        free(EIT_version_number);
-        entry = old_entry;
-    }
-    free(EIT_version_number_list);
+    free(version_list);
 
     for (entry=service_list->next; entry!=service_list; ) {
         service = get_data(entry, struct Service);
@@ -77,54 +65,50 @@ void em_finish() {
     free(service_list);
 }
 
-uint32_t em_get_SDT_version_number(struct Identifier id, uint32_t table_id) {
+struct Version *em_get_version(struct Identifier id) {
     struct list_node *version_number_entry = NULL;
-    struct SDTVersionNumber *version_number = NULL;
+    struct Version *version = NULL;
 
-    list_for_each(version_number_entry, SDT_version_number_list) {
-        version_number = get_data(version_number_entry, struct SDTVersionNumber);
+    list_for_each(version_number_entry, version_list) {
+        version = get_data(version_number_entry, struct Version);
 
-        if (compare_id(&version_number->id, &id))
-            return version_number->version_number;
+        if (compare_id(&version->id, &id))
+            return version;
     }
 
-    return -1;
+    version = (struct Version *)malloc(sizeof(struct Version));
+
+    version->id = id;
+    version->version_number = (uint32_t)-1;
+    version->completed = 0;
+
+    add_data_tail(version, version_list);
+
+    return version;
 }
 
-uint32_t em_get_EIT_version_number(struct Identifier id, uint32_t table_id) {
+void em_set_version_number(struct Identifier id, uint32_t version_number) {
     struct list_node *version_number_entry = NULL;
-    struct EITVersionNumber *version_number = NULL;
+    struct Version *version;
 
-    list_for_each(version_number_entry, EIT_version_number_list) {
-        version_number = get_data(version_number_entry, struct EITVersionNumber);
+    list_for_each(version_number_entry, version_list) {
+        version = get_data(version_number_entry, struct Version);
 
-        if (compare_id(&version_number->id, &id))
-            return version_number->version_number;
+        if (compare_id(&version->id, &id))
+            version->version_number = version_number;
     }
-
-    return -1;
 }
 
-void em_set_SDT_version_number(struct Identifier id, uint32_t table_id, uint32_t version_number) {
-    struct SDTVersionNumber *new_version_number = NULL;
+void em_set_version_completed(struct Identifier id, int completed) {
+    struct list_node *version_number_entry = NULL;
+    struct Version *version;
 
-    new_version_number = (struct SDTVersionNumber *)malloc(sizeof(struct SDTVersionNumber));
+    list_for_each(version_number_entry, version_list) {
+        version = get_data(version_number_entry, struct Version);
 
-    new_version_number->id = id;
-    new_version_number->version_number = version_number;
-
-    add_data_tail(new_version_number, SDT_version_number_list);
-}
-
-void em_set_EIT_version_number(struct Identifier id, uint32_t table_id, uint32_t version_number) {
-    struct EITVersionNumber *new_version_number;
-
-    new_version_number = (struct EITVersionNumber *)malloc(sizeof(struct EITVersionNumber));
-
-    new_version_number->id = id;
-    new_version_number->version_number = version_number;
-
-    add_data_tail(new_version_number, EIT_version_number_list);
+        if (compare_id(&version->id, &id))
+            version->completed = completed;
+    }
 }
 
 void em_store_service(struct Identifier id, char *service_name) {
@@ -157,6 +141,21 @@ void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration
     struct Service *service;
     struct list_node *service_entry, *event_entry, *event_list;
 
+    list_for_each(service_entry, service_list) {
+        service = get_data(service_entry, struct Service);
+
+        if (compare_id(&service->id, &id)) {
+            event_list = service->event_list;
+
+            list_for_each(event_entry, event_list) {
+                event = get_data(event_entry, struct Event);
+
+                if (compare_id(&event->id, &id))
+                    return;
+            }
+        }
+    }
+
     new_event = (struct Event *)malloc(sizeof(struct Event));
     new_event->id = id;
 
@@ -185,7 +184,7 @@ void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration
     id.event_id = -1;
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
-
+            
         if (compare_id(&service->id, &id)) {
             event_list = service->event_list;
 
@@ -222,19 +221,34 @@ void em_store_event(struct Identifier id, uint64_t start_time, uint32_t duration
 }
 
 void em_store_content_description(struct Identifier id, struct list_node *content_description_list) {
-    struct list_node *service_entry, *event_entry, *event_list;
+    struct list_node *service_entry, *event_entry, *old_content_description_entry, *content_description_entry, *event_list;
     struct Service *service;
     struct Event *event;
+    struct ContentDescription *content_description;
 
     event = NULL;
     list_for_each(service_entry, service_list) {
         service = get_data(service_entry, struct Service);
+
         if (compare_id(&service->id, &id)) {
             event_list = service->event_list;
 
             list_for_each(event_entry, event_list) {
                 event = get_data(event_entry, struct Event);
+
                 if (compare_id(&event->id, &id)) {
+                    if (event->content_description_list != NULL) {
+                        for (content_description_entry=event->content_description_list->next; content_description_entry!=event->content_description_list; ) {
+                            content_description = get_data(content_description_entry, struct ContentDescription);
+
+                            old_content_description_entry = content_description_entry->next;
+                            free(content_description->content_description_level_1);
+                            free(content_description->content_description_level_2);
+                            free(content_description);
+                            content_description_entry = old_content_description_entry;
+                        }
+                        free(event->content_description_list);
+                    }
                     event->content_description_list = content_description_list;
 
                     return;
@@ -259,7 +273,12 @@ void em_store_event_description(struct Identifier id, char *event_name, char *ev
                 event = get_data(event_entry, struct Event);
 
                 if (compare_id(&event->id, &id)) {
+                    if (event->event_name != NULL)
+                        free(event->event_name);
                     event->event_name = event_name;
+
+                    if (event->event_description != NULL)
+                        free(event->event_description);
                     event->event_description = event_description;
 
                     return;
