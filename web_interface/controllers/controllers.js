@@ -78,6 +78,15 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
                     service.highlight = false;
                 }
 
+                service.continued_up = false;
+                service.continued_down = false;
+                if (i === $scope.EPG_first_service_shown && i !== 0) {
+                    service.continued_up = true;
+                }
+                if (i === $scope.EPG_first_service_shown + $scope.EPG_max_services - 1 && i !== EPG.services.length - 1) {
+                    service.continued_down = true;
+                }
+
                 for (var j=0; j<EPG.services[i].events.length; ++j) {
                     var event = EPG.services[i].events[j];
                     var event_start_date = new Date(event.start_date);
@@ -88,14 +97,27 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
                         var hour_from_EPG_start = (event.start_date.getTime() - $scope.EPG_start_date.getTime()) / (1000 * 60 * 60);
 
+                        event.continued_left = false;
+                        event.continued_right = false;
+                        event.continued_both = false;
                         event.left = hour_from_EPG_start;
-                        if (event.start_date.getTime() < $scope.EPG_start_date.getTime())
+                        if (event.start_date.getTime() < $scope.EPG_start_date.getTime()) {
                             event.left = 0;
+                        }
                         event.width = event.duration;
-                        if (event.start_date.getTime() < $scope.EPG_start_date.getTime())
+                        if (event.start_date.getTime() < $scope.EPG_start_date.getTime()) {
                             event.width -= ($scope.EPG_start_date.getTime() - event.start_date.getTime()) / (1000 * 60 * 60);
-                        if (event.end_date.getTime() > $scope.EPG_end_date.getTime())
+                            event.continued_left = true;
+                        }
+                        if (event.end_date.getTime() > $scope.EPG_end_date.getTime()) {
                             event.width -= (event.end_date.getTime() - $scope.EPG_end_date.getTime()) / (1000 * 60 * 60);
+                            event.continued_right = true;
+                        }
+                        if (event.continued_left && event.continued_right) {
+                            event.continued_left = false;
+                            event.continued_right = false;
+                            event.continued_both = true;
+                        }
 
                         if (cursor.service === i && cursor.event === j) {
                             event.highlight = true;
@@ -104,6 +126,10 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
                         }
                     } else {
                         event.show = false;
+                        event.highlight = false;
+                        event.continued_left = false;
+                        event.continued_right = false;
+                        event.continued_both = false;
                     }
                 }
             }

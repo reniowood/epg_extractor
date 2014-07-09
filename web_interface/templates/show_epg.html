@@ -6,16 +6,15 @@
 </div>
 <div id="EPG" ng-style="{'width': EPG_length * EPG_hour_width + 200 + 20}">
     <div id="services">
-        <div class="service" ng-repeat="service in EPG.services" ng-show="service.show">
+        <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{continued_up: service.continued_up, continued_down: service.continued_down}">
             <span ng-bind="service.name" class="name"></span>
         </div>
     </div>
     <div id="events" ng-style="{'width': EPG_length * EPG_hour_width}">
         <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{highlight: service.highlight}">
-            <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * EPG_hour_width - 9, 'left': event.left * EPG_hour_width}" ng-show="event.show" ng-class="{highlight: event.highlight}">
-                <div class="name">
-                    <h3 ng-bind="event.name"></h3>
-                </div>
+            <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * EPG_hour_width - 9, 'left': event.left * EPG_hour_width}" ng-show="event.show" ng-class="{highlight: event.highlight, continued_left: event.continued_left, continued_right: event.continued_right, continued_both: event.continued_both}">
+                <span class="name" ng-bind="event.name">
+                </span>
             </div>
         </div>
     </div>
