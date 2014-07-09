@@ -4,6 +4,8 @@ body {
 
 #main {
     float: left;
+
+    font-family: Arial, Helvetica, sans-serif
 }
 
 #navigator {

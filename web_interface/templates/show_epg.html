@@ -1,20 +1,18 @@
 <div id="labels" ng-style="{'width': EPG_length * EPG_hour_width + 200 + 20}">
-    <div id="now_date" ng-bind="EPG_now_date"></div>
+    <span id="now_date" ng-bind="EPG_now_date"></span>
     <div id="hours">
-        <div ng-repeat="time_label in EPG_time_labels" class="label" ng-style="{'width': time_label.width * EPG_hour_width - 2}" ng-bind="time_label.label"></div>
+        <span ng-repeat="time_label in EPG_time_labels" class="label" ng-style="{'width': time_label.width * EPG_hour_width - 6}" ng-bind="time_label.label"></span>
     </div>
 </div>
 <div id="EPG" ng-style="{'width': EPG_length * EPG_hour_width + 200 + 20}">
     <div id="services">
         <div class="service" ng-repeat="service in EPG.services" ng-show="service.show">
-            <div class="name">
-                <h2 ng-bind="service.name"></h2>
-            </div>
+            <span ng-bind="service.name" class="name"></span>
         </div>
     </div>
     <div id="events" ng-style="{'width': EPG_length * EPG_hour_width}">
-        <div class="service" ng-repeat="service in EPG.services" ng-show="service.show">
-            <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * EPG_hour_width - 7, 'left': event.left * EPG_hour_width}" ng-show="event.show">
+        <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{highlight: service.highlight}">
+            <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * EPG_hour_width - 9, 'left': event.left * EPG_hour_width}" ng-show="event.show" ng-class="{highlight: event.highlight}">
                 <div class="name">
                     <h3 ng-bind="event.name"></h3>
                 </div>

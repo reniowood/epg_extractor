@@ -7,7 +7,7 @@
 }
 
 #services > .service {
-    height: 100px;
+    height: 108px;
 }
 
 #events {
@@ -19,7 +19,22 @@
 #events > .service {
     position: relative;
 
-    height: 102px;
+    height: 108px;
+}
+
+.service > .name {
+    float: left;
+
+    width: 200px;
+    height: 62px;
+    padding-top: 42px;
+
+    text-align: center;
+    font-size: 25px;
+
+    background-color: #0C274D;
+    color: #ffffff;
+    border: solid 2px #ffffff;
 }
 
 .event {
@@ -29,35 +44,32 @@
 
     width: 250px;
     height: 100px;
-    border: 1px solid #000000;
-}
 
-.service > .name {
-    float: left;
-
-    width: 200px;
-    height: 100px;
-    border: 1px solid #000000;
-
-    text-align: center;
+    background-color: #18709C;
+    color: #ffffff;
+    border: solid 4px #ffffff;
 }
 
 .event > .name {
-    margin-top: 30px;
+    margin-top: 10px;
+    height: 20px;
 }
 
 #labels {
     width: 1800px;
-    height: 42px;
+    height: 30px;
+
+    margin-bottom: 12px;
 }
 
 #now_date {
     float: left;
 
-    width: 200px;
+    width: 202px;
     height: 30px;
 
-    border: 1px solid #000000;
+    text-align: center;
+    font-size: 28px;
 }
 
 #hours {
@@ -67,8 +79,17 @@
 .label {
     display: inline-block;
 
-    width: 198px;
     height: 30px;
 
-    border: 1px solid #000000;
+    padding-left: 5px;
+    border-left: 1px solid #000000;
+
+    font-size: 24px;
+}
+
+.service.highlight > .event {
+    border-color: #19BDC4;
+}
+.event.highlight {
+    background-color: #19BDC4;
 }
