@@ -63,12 +63,19 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
             return labels;
         };
-        var set_EPG_style = function (EPG, start_date, end_date) {
+        var set_EPG_style = function (EPG, start_date, end_date, cursor) {
             for (var i=0; i<EPG.services.length; ++i) {
+                var service = EPG.services[i];
                 if (i >= $scope.EPG_first_service_shown && i < $scope.EPG_first_service_shown + $scope.EPG_max_services) {
-                    EPG.services[i].show = true;
+                    service.show = true;
                 } else {
-                    EPG.services[i].show = false;
+                    service.show = false;
+                }
+
+                if (cursor.service === i) {
+                    service.highlight = true;
+                } else {
+                    service.highlight = false;
                 }
 
                 for (var j=0; j<EPG.services[i].events.length; ++j) {
@@ -89,6 +96,12 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
                             event.width -= ($scope.EPG_start_date.getTime() - event.start_date.getTime()) / (1000 * 60 * 60);
                         if (event.end_date.getTime() > $scope.EPG_end_date.getTime())
                             event.width -= (event.end_date.getTime() - $scope.EPG_end_date.getTime()) / (1000 * 60 * 60);
+
+                        if (cursor.service === i && cursor.event === j) {
+                            event.highlight = true;
+                        } else {
+                            event.highlight = false;
+                        }
                     } else {
                         event.show = false;
                     }
@@ -109,50 +122,224 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
             $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
             $scope.EPG = EPG.generate_EPG(EPGData.services, EPGData.start_date, EPGData.end_date);
 
+            $scope.EPG_cursor = {
+                service: 0,
+                event: 0
+            };
+
             $scope.update_EPG();
         };
 
         $scope.update_EPG = function () {
             $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
-            set_EPG_style($scope.EPG, $scope.EPG_start_date, $scope.EPG_end_date);
+            set_EPG_style($scope.EPG, $scope.EPG_start_date, $scope.EPG_end_date, $scope.EPG_cursor);
         };
         $scope.backward = function () {
-            $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
-            $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
-            if ($scope.EPG_start_date.getTime() < $scope.EPG.start_date.getTime()) {
-                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
-                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
+            var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            if (focused_event.start_date.getTime() < $scope.EPG_start_date.getTime()) {
+                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - $scope.EPG_length);
+                if (focused_event.start_date.getTime() >= $scope.EPG_start_date.getTime()) {
+                    $scope.EPG_start_date = new Date(focused_event.start_date);
+                }
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            } else {
+                $scope.EPG_cursor.event--;
+                if ($scope.EPG_cursor.event < 0) {
+                    $scope.EPG_cursor.event = 0;
+                }
+
+                focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+                if (focused_event.start_date.getTime() < $scope.EPG_start_date.getTime() && focused_event.end_date.getTime() <= $scope.EPG_start_date.getTime()) {
+                    $scope.EPG_start_date = new Date(focused_event.start_date);
+                    $scope.EPG_start_date.setMinutes(0);
+                    $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                    $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+                }
+                if ($scope.EPG_start_date.getTime() < $scope.EPG.start_date.getTime()) {
+                    $scope.EPG_start_date = new Date($scope.EPG.start_date);
+                    $scope.EPG_start_date.setMinutes(0);
+                    $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                    $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+                }
             }
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
 
             $scope.update_EPG();
         };
         $scope.forward = function () {
-            $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() + 1);
-            $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + 1);
-            if ($scope.EPG_end_date.getTime() > $scope.EPG.end_date.getTime()) {
-                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - 1);
-                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() - 1);
+            var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            if (focused_event.end_date.getTime() > $scope.EPG_end_date.getTime()) {
+                $scope.EPG_start_date = new Date($scope.EPG_end_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            } else {
+                $scope.EPG_cursor.event++;
+                if ($scope.EPG_cursor.event === $scope.EPG.services[$scope.EPG_cursor.service].events.length) {
+                    $scope.EPG_cursor.event = $scope.EPG.services[$scope.EPG_cursor.service].events.length - 1;
+                }
+
+                focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+                if (focused_event.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                    $scope.EPG_start_date = new Date(focused_event.start_date);
+                    $scope.EPG_start_date.setMinutes(0);
+                    $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                    $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+                }
+                if ($scope.EPG_end_date.getTime() > $scope.EPG.end_date.getTime()) {
+                    $scope.EPG_end_date = new Date($scope.EPG.end_date);
+                    $scope.EPG_end_date.setMinutes(0);
+                    $scope.EPG_start_date = new Date($scope.EPG_end_date);
+                    $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - $scope.EPG_length);
+                }
             }
             $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
 
             $scope.update_EPG();
         };
         $scope.prev_service = function () {
-            $scope.EPG_first_service_shown--;
+            var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            var focused_event_start_time = focused_event.start_date.getTime() > $scope.EPG_start_date.getTime() ? focused_event.start_date.getTime() : $scope.EPG_start_date.getTime();
+
+            while (true) {
+                if ($scope.EPG_cursor.service === 0) {
+                    break;
+                }
+
+                var previous_service = $scope.EPG.services[$scope.EPG_cursor.service - 1];
+                var event_index = 0;
+                var minimum_difference_start_time = Number.MAX_VALUE;
+                var minimum_difference_start_time_event_index = -1;
+                for (; event_index<previous_service.events.length; ++event_index) {
+                    var event_candidate = previous_service.events[event_index];
+
+                    if (event_candidate.end_date.getTime() <= $scope.EPG_start_date.getTime() || event_candidate.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                        continue;
+                    }
+
+                    var event_candidate_start_time = event_candidate.start_date.getTime() > $scope.EPG_start_date.getTime() ? event_candidate.start_date.getTime() : $scope.EPG_start_date.getTime();
+                    if (Math.abs(focused_event_start_time - event_candidate_start_time) < minimum_difference_start_time) {
+                        minimum_difference_start_time = Math.abs(focused_event_start_time - event_candidate_start_time);
+                        minimum_difference_start_time_event_index = event_index;
+                    }
+                }
+
+                $scope.EPG_cursor.service--;
+                if (minimum_difference_start_time_event_index !== -1) {
+                    $scope.EPG_cursor.event = minimum_difference_start_time_event_index;
+
+                    break;
+                }
+            }
+
+            focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            if (focused_event.start_date.getTime() < $scope.EPG_start_date.getTime() && focused_event.end_date.getTime() < $scope.EPG_start_date.getTime()) {
+                $scope.EPG_start_date = new Date(focused_event.start_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            }
+            if ($scope.EPG_start_date.getTime() < $scope.EPG.start_date.getTime()) {
+                $scope.EPG_start_date = new Date($scope.EPG.start_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            }
+            if (focused_event.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                $scope.EPG_start_date = new Date(focused_event.start_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            }
+            if ($scope.EPG_end_date.getTime() > $scope.EPG.end_date.getTime()) {
+                $scope.EPG_end_date = new Date($scope.EPG.end_date);
+                $scope.EPG_end_date.setMinutes(0);
+                $scope.EPG_start_date = new Date($scope.EPG_end_date);
+                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - $scope.EPG_length);
+            }
+            $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+
+            if ($scope.EPG_cursor.service < $scope.EPG_first_service_shown) {
+                $scope.EPG_first_service_shown = $scope.EPG_cursor.service;
+            }
             if ($scope.EPG_first_service_shown < 0) {
                 $scope.EPG_first_service_shown = 0;
-            } else {
-                $scope.update_EPG();
             }
+
+            $scope.update_EPG();
         };
         $scope.next_service = function () {
-            $scope.EPG_first_service_shown++;
+            var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            var focused_event_start_time = focused_event.start_date.getTime() > $scope.EPG_start_date.getTime() ? focused_event.start_date.getTime() : $scope.EPG_start_date.getTime();
+
+            while (true) {
+                if ($scope.EPG_cursor.service === $scope.EPG.services.length - 1) {
+                    break;
+                }
+
+                var previous_service = $scope.EPG.services[$scope.EPG_cursor.service + 1];
+                var event_index = 0;
+                var minimum_difference_start_time = Number.MAX_VALUE;
+                var minimum_difference_start_time_event_index = -1;
+                for (; event_index<previous_service.events.length; ++event_index) {
+                    var event_candidate = previous_service.events[event_index];
+
+                    if (event_candidate.end_date.getTime() <= $scope.EPG_start_date.getTime() || event_candidate.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                        continue;
+                    }
+
+                    var event_candidate_start_time = event_candidate.start_date.getTime() > $scope.EPG_start_date.getTime() ? event_candidate.start_date.getTime() : $scope.EPG_start_date.getTime();
+                    if (Math.abs(focused_event_start_time - event_candidate_start_time) < minimum_difference_start_time) {
+                        minimum_difference_start_time = Math.abs(focused_event_start_time - event_candidate_start_time);
+                        minimum_difference_start_time_event_index = event_index;
+                    }
+                }
+
+                $scope.EPG_cursor.service++;
+                if (minimum_difference_start_time_event_index !== -1) {
+                    $scope.EPG_cursor.event = minimum_difference_start_time_event_index;
+
+                    break;
+                }
+            }
+
+            focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            if (focused_event.start_date.getTime() < $scope.EPG_start_date.getTime() && focused_event.end_date.getTime() < $scope.EPG_start_date.getTime()) {
+                $scope.EPG_start_date = new Date(focused_event.start_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            }
+            if ($scope.EPG_start_date.getTime() < $scope.EPG.start_date.getTime()) {
+                $scope.EPG_start_date = new Date($scope.EPG.start_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            }
+            if (focused_event.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                $scope.EPG_start_date = new Date(focused_event.start_date);
+                $scope.EPG_start_date.setMinutes(0);
+                $scope.EPG_end_date = new Date($scope.EPG_start_date);
+                $scope.EPG_end_date.setHours($scope.EPG_end_date.getHours() + $scope.EPG_length);
+            }
+            if ($scope.EPG_end_date.getTime() > $scope.EPG.end_date.getTime()) {
+                $scope.EPG_end_date = new Date($scope.EPG.end_date);
+                $scope.EPG_end_date.setMinutes(0);
+                $scope.EPG_start_date = new Date($scope.EPG_end_date);
+                $scope.EPG_start_date.setHours($scope.EPG_start_date.getHours() - $scope.EPG_length);
+            }
+            $scope.EPG_now_date = ($scope.EPG_start_date.getMonth() + 1) + '/' + $scope.EPG_start_date.getDate();
+
+            if ($scope.EPG_cursor.service >= $scope.EPG_first_service_shown + $scope.EPG_max_services) {
+                $scope.EPG_first_service_shown = $scope.EPG_cursor.service;
+            }
             if ($scope.EPG_first_service_shown === $scope.EPG.services.length - $scope.EPG_max_services + 1) {
                 $scope.EPG_first_service_shown = $scope.EPG.services.length - $scope.EPG_max_services;
-            } else {
-                $scope.update_EPG();
             }
+
+            $scope.update_EPG();
         };
 
         $scope.$on('NavigatorMsg', function () {
