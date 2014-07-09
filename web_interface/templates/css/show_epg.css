@@ -90,9 +90,6 @@
     color: white;
 }
 
-.service.highlight > .event {
-    border-color: #19BDC4;
-}
 .event.highlight {
     background-color: #19BDC4;
 }
