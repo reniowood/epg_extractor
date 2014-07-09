@@ -75,7 +75,8 @@ services.factory('NavigatorService', function ($rootScope) {
         LEFT: 0,
         DOWN: 1,
         UP: 2,
-        RIGHT: 3
+        RIGHT: 3,
+        OK: 4
     };
     navigator_service.navigate = function (keycode) {
         this.keycode = keycode;

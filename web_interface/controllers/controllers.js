@@ -147,6 +147,7 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
             $scope.EPG_time_labels = get_time_labels($scope.EPG_start_date, $scope.EPG_end_date);
             $scope.EPG = EPG.generate_EPG(EPGData.services, EPGData.start_date, EPGData.end_date);
+            $scope.EPG_description_show = false;
 
             $scope.EPG_cursor = {
                 service: 0,
@@ -427,6 +428,26 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
             $scope.update_EPG();
         };
+        $scope.toggle_description = function () {
+            if ($scope.EPG_description_show) {
+                $scope.EPG_description_show = false;
+
+                return;
+            }
+
+            var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
+            var description_popup = $('event-description');
+            var description_popup_name = $('event-description .name');
+            var description_popup_description = $('event-description .description');
+            description_popup_name.text(focused_event.name);
+            description_popup_description.text(focused_event.description);
+
+            var event_DOM_element = $('#events').children().eq($scope.EPG_cursor.service).children().eq($scope.EPG_cursor.event);
+            description_popup.css('top', event_DOM_element.css('top'));
+            description_popup.css('left', event_DOM_element.css('left'));
+
+            $scope.EPG_description_show = true;
+        };
 
         $scope.$on('NavigatorMsg', function () {
             switch (navigator_service.keycode) {
@@ -446,9 +467,16 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
                     console.log('DOWN');
                     $scope.next_service();
                     break;
+                case navigator_service.KEY_CODE.OK:
+                    console.log('OK');
+                    $scope.toggle_description();
+                    break;
             }
         });
 
         init_EPG();
     }
 ]);
+
+app.directive('event-description', function () {
+});

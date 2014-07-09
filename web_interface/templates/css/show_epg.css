@@ -141,3 +141,21 @@
     background: -moz-linear-gradient(right, black, #19BDC4, black); /* For Firefox 3.6 to 15 */
     background: linear-gradient(to right, black, #19BDC4 , black); /* Standard syntax (must be last) */
 }
+
+event-description {
+    display: block;
+    position: absolute;
+
+    width: 300px;
+    height: 200px;
+    padding: 20px;
+
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+event-description .name {
+    font-size: 30px;
+}
+
+event-description .description {
+}

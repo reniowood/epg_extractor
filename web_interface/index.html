@@ -19,6 +19,7 @@
         <div id="main" ng-view></div>
         <div id="navigator" ng-controller="Navigator">
             <form>
+                <button id="btn-ok" ng-click="navigate(KEY_CODE.OK)" value="ok">●</button>
                 <button id="btn-left" ng-click="navigate(KEY_CODE.LEFT)" value="left">◀</button>
                 <button id="btn-down" ng-click="navigate(KEY_CODE.DOWN)" value="down">▼</button>
                 <button id="btn-up" ng-click="navigate(KEY_CODE.UP)" value="up">▲</button>
