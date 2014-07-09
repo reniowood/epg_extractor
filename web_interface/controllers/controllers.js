@@ -202,6 +202,7 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         $scope.prev_service = function () {
             var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
             var focused_event_start_time = focused_event.start_date.getTime() > $scope.EPG_start_date.getTime() ? focused_event.start_date.getTime() : $scope.EPG_start_date.getTime();
+            var focused_event_end_time = focused_event.end_date.getTime();
 
             while (true) {
                 if ($scope.EPG_cursor.service === 0) {
@@ -210,25 +211,54 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
                 var previous_service = $scope.EPG.services[$scope.EPG_cursor.service - 1];
                 var event_index = 0;
-                var minimum_difference_start_time = Number.MAX_VALUE;
-                var minimum_difference_start_time_event_index = -1;
+                var fastest_start_covered_event_time = Number.MAX_VALUE;
+                var fastest_start_covered_event_index = -1;
+                var fastest_start_event_time = Number.MAX_VALUE;
+                var fastest_start_event_index = -1;
+                var cover_event_index = -1;
                 for (; event_index<previous_service.events.length; ++event_index) {
                     var event_candidate = previous_service.events[event_index];
+                    var event_candidate_start_time = event_candidate.start_date.getTime() > $scope.EPG_start_date.getTime() ? event_candidate.start_date.getTime() : $scope.EPG_start_date.getTime();
+                    var event_candidate_end_time = event_candidate.end_date.getTime();
 
-                    if (event_candidate.end_date.getTime() <= $scope.EPG_start_date.getTime() || event_candidate.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                    if (event_candidate_end_time <= $scope.EPG_start_date.getTime() || event_candidate_start_time >= $scope.EPG_end_date.getTime()) {
                         continue;
                     }
 
-                    var event_candidate_start_time = event_candidate.start_date.getTime() > $scope.EPG_start_date.getTime() ? event_candidate.start_date.getTime() : $scope.EPG_start_date.getTime();
-                    if (Math.abs(focused_event_start_time - event_candidate_start_time) < minimum_difference_start_time) {
-                        minimum_difference_start_time = Math.abs(focused_event_start_time - event_candidate_start_time);
-                        minimum_difference_start_time_event_index = event_index;
+                    if (event_candidate_start_time < focused_event_start_time && event_candidate_end_time >= focused_event_end_time) {
+                        cover_event_index = event_index;
+                    }
+
+                    if (event_candidate_end_time <= focused_event_start_time || event_candidate_start_time >= focused_event_end_time) {
+                        continue;
+                    }
+
+                    if (event_candidate_start_time < fastest_start_event_time) {
+                        fastest_start_event_time = event_candidate_start_time;
+                        fastest_start_event_index = event_index;
+                    }
+
+                    if (event_candidate_start_time < focused_event_start_time || event_candidate_end_time > focused_event_end_time) {
+                        continue;
+                    }
+
+                    if (event_candidate_start_time < fastest_start_covered_event_time) {
+                        fastest_start_covered_event_time = event_candidate_start_time;
+                        fastest_start_covered_event_index = event_index;
                     }
                 }
 
                 $scope.EPG_cursor.service--;
-                if (minimum_difference_start_time_event_index !== -1) {
-                    $scope.EPG_cursor.event = minimum_difference_start_time_event_index;
+                if (fastest_start_covered_event_index !== -1) {
+                    $scope.EPG_cursor.event = fastest_start_covered_event_index;
+
+                    break;
+                } else if (fastest_start_event_index !== -1) {
+                    $scope.EPG_cursor.event = fastest_start_event_index;
+
+                    break;
+                } else if (cover_event_index !== -1) {
+                    $scope.EPG_cursor.event = cover_event_index;
 
                     break;
                 }
@@ -273,6 +303,7 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         $scope.next_service = function () {
             var focused_event = $scope.EPG.services[$scope.EPG_cursor.service].events[$scope.EPG_cursor.event];
             var focused_event_start_time = focused_event.start_date.getTime() > $scope.EPG_start_date.getTime() ? focused_event.start_date.getTime() : $scope.EPG_start_date.getTime();
+            var focused_event_end_time = focused_event.end_date.getTime() > $scope.EPG_end_date.getTime() ? $scope.EPG_end_date.getTime() : focused_event.end_date.getTime();
 
             while (true) {
                 if ($scope.EPG_cursor.service === $scope.EPG.services.length - 1) {
@@ -281,25 +312,54 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
 
                 var previous_service = $scope.EPG.services[$scope.EPG_cursor.service + 1];
                 var event_index = 0;
-                var minimum_difference_start_time = Number.MAX_VALUE;
-                var minimum_difference_start_time_event_index = -1;
+                var fastest_start_covered_event_time = Number.MAX_VALUE;
+                var fastest_start_covered_event_index = -1;
+                var fastest_start_event_time = Number.MAX_VALUE;
+                var fastest_start_event_index = -1;
+                var cover_event_index = -1;
                 for (; event_index<previous_service.events.length; ++event_index) {
                     var event_candidate = previous_service.events[event_index];
+                    var event_candidate_start_time = event_candidate.start_date.getTime() > $scope.EPG_start_date.getTime() ? event_candidate.start_date.getTime() : $scope.EPG_start_date.getTime();
+                    var event_candidate_end_time = event_candidate.end_date.getTime() > $scope.EPG_end_date.getTime() ? $scope.EPG_end_date.getTime() : event_candidate.end_date.getTime();
 
-                    if (event_candidate.end_date.getTime() <= $scope.EPG_start_date.getTime() || event_candidate.start_date.getTime() >= $scope.EPG_end_date.getTime()) {
+                    if (event_candidate_end_time <= $scope.EPG_start_date.getTime() || event_candidate_start_time >= $scope.EPG_end_date.getTime()) {
                         continue;
                     }
 
-                    var event_candidate_start_time = event_candidate.start_date.getTime() > $scope.EPG_start_date.getTime() ? event_candidate.start_date.getTime() : $scope.EPG_start_date.getTime();
-                    if (Math.abs(focused_event_start_time - event_candidate_start_time) < minimum_difference_start_time) {
-                        minimum_difference_start_time = Math.abs(focused_event_start_time - event_candidate_start_time);
-                        minimum_difference_start_time_event_index = event_index;
+                    if (event_candidate_start_time < focused_event_start_time && event_candidate_end_time >= focused_event_end_time) {
+                        cover_event_index = event_index;
+                    }
+
+                    if (event_candidate_end_time <= focused_event_start_time || event_candidate_start_time >= focused_event_end_time) {
+                        continue;
+                    }
+
+                    if (event_candidate_start_time < fastest_start_event_time) {
+                        fastest_start_event_time = event_candidate_start_time;
+                        fastest_start_event_index = event_index;
+                    }
+
+                    if (event_candidate_start_time < focused_event_start_time || event_candidate_end_time > focused_event_end_time) {
+                        continue;
+                    }
+
+                    if (event_candidate_start_time < fastest_start_covered_event_time) {
+                        fastest_start_covered_event_time = event_candidate_start_time;
+                        fastest_start_covered_event_index = event_index;
                     }
                 }
 
                 $scope.EPG_cursor.service++;
-                if (minimum_difference_start_time_event_index !== -1) {
-                    $scope.EPG_cursor.event = minimum_difference_start_time_event_index;
+                if (fastest_start_covered_event_index !== -1) {
+                    $scope.EPG_cursor.event = fastest_start_covered_event_index;
+
+                    break;
+                } else if (fastest_start_event_index !== -1) {
+                    $scope.EPG_cursor.event = fastest_start_event_index;
+
+                    break;
+                } else if (cover_event_index !== -1) {
+                    $scope.EPG_cursor.event = cover_event_index;
 
                     break;
                 }
