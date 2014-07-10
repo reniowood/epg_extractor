@@ -429,7 +429,9 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
             $scope.update_EPG();
         };
         $scope.toggle_description = function () {
-            if ($scope.EPG_description_show) {
+            if ($scope.EPG_description_show &&
+                $scope.last_focused_event.service === $scope.EPG_cursor.service &&
+                $scope.last_focused_event.event === $scope.EPG_cursor.event) {
                 $scope.EPG_description_show = false;
 
                 return;
@@ -443,10 +445,26 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
             description_popup_description.text(focused_event.description);
 
             var event_DOM_element = $('#events').children().eq($scope.EPG_cursor.service).children().eq($scope.EPG_cursor.event);
-            description_popup.css('top', event_DOM_element.css('top'));
-            description_popup.css('left', event_DOM_element.css('left'));
+            description_popup.css({
+                top: event_DOM_element.offset().top + 70,
+                left: event_DOM_element.offset().left + 70
+            });
+            if (parseFloat(description_popup.css('top')) + description_popup.height() > $('#main').offset().top + $('#main').height()) {
+                description_popup.css({
+                    top: event_DOM_element.offset().top - description_popup.height()
+                });
+            }
+            if (parseFloat(description_popup.css('left')) + description_popup.width() > $('#main').offset().left + $('#main').width()) {
+                description_popup.css({
+                    left: event_DOM_element.offset().left - description_popup.width()
+                });
+            }
 
             $scope.EPG_description_show = true;
+            $scope.last_focused_event = {
+                service: $scope.EPG_cursor.service,
+                event: $scope.EPG_cursor.event
+            };
         };
 
         $scope.$on('NavigatorMsg', function () {
