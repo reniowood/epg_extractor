@@ -468,23 +468,25 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'NavigatorService',
         };
 
         $scope.$on('NavigatorMsg', function () {
-            $scope.EPG_description_show = false;
-
             switch (navigator_service.keycode) {
                 case navigator_service.KEY_CODE.LEFT:
                     console.log('LEFT');
+                    $scope.EPG_description_show = false;
                     $scope.backward();
                     break;
                 case navigator_service.KEY_CODE.RIGHT:
                     console.log('RIGHT');
+                    $scope.EPG_description_show = false;
                     $scope.forward();
                     break;
                 case navigator_service.KEY_CODE.UP:
                     console.log('UP');
+                    $scope.EPG_description_show = false;
                     $scope.prev_service();
                     break;
                 case navigator_service.KEY_CODE.DOWN:
                     console.log('DOWN');
+                    $scope.EPG_description_show = false;
                     $scope.next_service();
                     break;
                 case navigator_service.KEY_CODE.OK:
