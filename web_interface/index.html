@@ -38,5 +38,31 @@
                 </table>
             </form>
         </div>
+
+        <script>
+            document.addEventListener('keydown', function (event) {
+                var key_code = event.keyCode;
+
+                console.log('document.keypress: ' + key_code);
+
+                switch (key_code) {
+                    case 38: // up arrow
+                        $('#btn-up').click();
+                        break;
+                    case 40: // down arrow
+                        $('#btn-down').click();
+                        break;
+                    case 37: // left arrow
+                        $('#btn-left').click();
+                        break;
+                    case 39: // right arrow
+                        $('#btn-right').click();
+                        break;
+                    case 13: // enter
+                        $('#btn-ok').click();
+                        break;
+                }
+            }, false);
+        </script>
     </body>
 </html>
