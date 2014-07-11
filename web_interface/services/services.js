@@ -242,7 +242,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
             }
 
             if (this.cursor.service_index < this.first_service_index) {
-                this.first_service_index = this.cursor.service_index;
+                this.first_service_index = this.cursor.service_index - this.MAX_SERVICES + 1;
             }
             if (this.first_service_index < 0) {
                 this.first_service_index = 0;
