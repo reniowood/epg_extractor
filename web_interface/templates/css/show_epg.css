@@ -142,7 +142,7 @@
     background: linear-gradient(to right, black, #19BDC4 , black); /* Standard syntax (must be last) */
 }
 
-event-description {
+description-popup {
     display: block;
     position: absolute;
 
@@ -153,9 +153,9 @@ event-description {
     background-color: rgba(255, 255, 255, 0.8);
 }
 
-event-description .name {
+description-popup .name {
     font-size: 30px;
 }
 
-event-description .description {
+description-popup .description {
 }
