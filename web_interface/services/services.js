@@ -83,7 +83,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
          * private functions
          */
         _set_now_date: function () {
-            this.now_date = (this.start_date.getMonth() + 1) + '/' + this.start_date.getDate();
+            this.EPG.now_date = (this.start_date.getMonth() + 1) + '/' + this.start_date.getDate();
         },
         _update_time_labels: function () {
             this.EPG.time_labels = [];
