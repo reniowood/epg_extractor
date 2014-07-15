@@ -481,7 +481,10 @@ services.factory('Navigator', ['$rootScope', function ($rootScope) {
 
         console.log('Navigator: navigate(keycode = ' + keycode + ')');
 
-        $rootScope.$broadcast('NavigatorMsg');
+        $rootScope.$broadcast('NavigatorKeyPress');
+    };
+    navigator_service.init_navigator = function () {
+        $rootScope.$broadcast('NavigatorInit');
     };
 
     return navigator_service;

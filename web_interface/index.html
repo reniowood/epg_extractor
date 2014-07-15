@@ -18,52 +18,24 @@
     <body>
         <h1>EPG Viewer</h1>
         <div id="main" ng-view></div>
-        <div id="navigator" ng-controller="Navigator">
-            <form>
-                <table>
-                    <tr>
-                        <td></td>
-                        <td><button id="btn-up" ng-click="navigate(KEY_CODE.UP)" value="up">▲</button></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td><button id="btn-left" ng-click="navigate(KEY_CODE.LEFT)" value="left">◀</button></td>
-                        <td><button id="btn-ok" ng-click="navigate(KEY_CODE.OK)" value="ok">●</button></td>
-                        <td><button id="btn-right" ng-click="navigate(KEY_CODE.RIGHT)" value="right">▶</button></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td><button id="btn-down" ng-click="navigate(KEY_CODE.DOWN)" value="down">▼</button></td>
-                        <td></td>
-                    </tr>
-                </table>
-            </form>
-        </div>
-
-        <script>
-            document.addEventListener('keydown', function (event) {
-                var key_code = event.keyCode;
-
-                console.log('document.keypress: ' + key_code);
-
-                switch (key_code) {
-                    case 38: // up arrow
-                        $('#btn-up').click();
-                        break;
-                    case 40: // down arrow
-                        $('#btn-down').click();
-                        break;
-                    case 37: // left arrow
-                        $('#btn-left').click();
-                        break;
-                    case 39: // right arrow
-                        $('#btn-right').click();
-                        break;
-                    case 13: // enter
-                        $('#btn-ok').click();
-                        break;
-                }
-            }, false);
-        </script>
+        <navigator ng-show="is_EPG_loaded">
+            <table>
+                <tr>
+                    <td></td>
+                    <td><button id="btn-up" ng-click="navigate(KEY_CODE.UP)" value="up">▲</button></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="btn-left" ng-click="navigate(KEY_CODE.LEFT)" value="left">◀</button></td>
+                    <td><button id="btn-ok" ng-click="navigate(KEY_CODE.OK)" value="ok">●</button></td>
+                    <td><button id="btn-right" ng-click="navigate(KEY_CODE.RIGHT)" value="right">▶</button></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><button id="btn-down" ng-click="navigate(KEY_CODE.DOWN)" value="down">▼</button></td>
+                    <td></td>
+                </tr>
+            </table>
+        </navigator>
     </body>
 </html>

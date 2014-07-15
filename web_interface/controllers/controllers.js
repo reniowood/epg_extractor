@@ -20,16 +20,6 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
     });
 }]);
 
-app.controller('Navigator', ['$scope', 'Navigator', 
-    function ($scope, navigator) {
-        $scope.KEY_CODE = navigator.KEY_CODE;
-
-        $scope.navigate = function (keycode) {
-            navigator.navigate(keycode);
-        };
-    }
-]);
-
 app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource',
     function ($scope, $location, EPGResource, EPG) {
         $scope.TSFileName = '';
@@ -48,7 +38,9 @@ app.controller('ShowEPGCtrl', ['$scope', 'EPGData', 'EPG', 'ProgramGuide', 'Navi
         $scope.length_in_hour = program_guide.LENGTH_IN_HOUR;
         $scope.event_width_per_hour = 300;
 
-        $scope.$on('NavigatorMsg', function () {
+        navigator.init_navigator();
+
+        $scope.$on('NavigatorKeyPress', function () {
             switch (navigator.keycode) {
                 case navigator.KEY_CODE.UP:
                     program_guide.navigate(program_guide.DIRECTION.UP);

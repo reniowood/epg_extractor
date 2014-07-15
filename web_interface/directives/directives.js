@@ -6,7 +6,6 @@ directives.directive('descriptionPopup', ['$rootScope', 'ProgramGuide', 'Navigat
         template: '<span class="name" ng-bind="description_popup_content.name"></span><p class="description" ng-bind="description_popup_content.description"></p>',
         link: function (scope, element, attrs) {
             scope.show = false;
-
             var last_focused_event = program_guide.cursor;
 
             function toggle_description() {
@@ -41,7 +40,7 @@ directives.directive('descriptionPopup', ['$rootScope', 'ProgramGuide', 'Navigat
                 scope.show = true;
             }
 
-            $rootScope.$on('NavigatorMsg', function () {
+            scope.$on('NavigatorKeyPress', function () {
                 switch (navigator.keycode) {
                     case navigator.KEY_CODE.UP:
                     case navigator.KEY_CODE.DOWN:
@@ -54,6 +53,48 @@ directives.directive('descriptionPopup', ['$rootScope', 'ProgramGuide', 'Navigat
                         break;
                 }
             });
+        }
+    };
+}]);
+
+directives.directive('navigator', ['Navigator', function (navigator) {
+    return {
+        restrict: 'E',
+        link: function (scope, element, attrs) {
+            scope.is_EPG_loaded = false;
+            scope.KEY_CODE = navigator.KEY_CODE;
+
+            scope.navigate = function (keycode) {
+                navigator.navigate(keycode);
+            };
+
+            scope.$on('NavigatorInit', function () {
+                scope.is_EPG_loaded = true;
+            });
+
+            document.addEventListener('keydown', function (event) {
+                var key_code = event.keyCode;
+
+                console.log('document.keypress: ' + key_code);
+
+                switch (key_code) {
+                    case 38: // up arrow
+                        $('#btn-up').click();
+                        break;
+                    case 40: // down arrow
+                        $('#btn-down').click();
+                        break;
+                    case 37: // left arrow
+                        $('#btn-left').click();
+                        break;
+                    case 39: // right arrow
+                        $('#btn-right').click();
+                        break;
+                    case 13: // enter
+                        $('#btn-ok').click();
+                        break;
+                }
+            }, false);
         }
     };
 }]);
