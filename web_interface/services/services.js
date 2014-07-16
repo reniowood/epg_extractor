@@ -82,28 +82,6 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
         /*
          * private functions
          */
-        _set_now_date: function () {
-            this.EPG.now_date = (this.start_date.getMonth() + 1) + '/' + this.start_date.getDate();
-        },
-        _update_time_labels: function () {
-            this.EPG.time_labels = [];
-
-            var date = new Date(this.start_date);
-            while (date < this.end_date) {
-                var label = (date.getHours().toString().length == 2 ? date.getHours() : ('0' + date.getHours())) + ':' + (date.getMinutes().toString().length == 2 ? data.getMinutes() : ('0' + date.getMinutes()));
-                var next_hour = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours() + 1);
-                if (this.end_date < next_hour)
-                    next_hour = this.end_date;
-
-                this.EPG.time_labels.push({
-                    'label': label,
-                    'width': (next_hour - date) / (1000 * 60 * 60),
-                });
-
-                date.setHours(date.getHours() + 1);
-                date.setMinutes(0);
-            }
-        },
         _go_previous_event: function (focused_event) {
             if (focused_event.start_date.getTime() < this.start_date.getTime()) {
                 this.start_date.setHours(this.start_date.getHours() - this.LENGTH_IN_HOUR);
@@ -408,9 +386,6 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     }
                 }
             }
-
-            this._update_time_labels();
-            this._set_now_date();
         },
         /*
          * API
