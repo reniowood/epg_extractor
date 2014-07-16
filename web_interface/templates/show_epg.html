@@ -1,23 +1,25 @@
-<div id="labels" ng-style="{'width': length_in_hour * event_width_per_hour + 200 + 20}">
-    <span id="now_date" ng-bind="EPG.now_date"></span>
-    <div id="hours">
-        <span ng-repeat="time_label in EPG.time_labels" class="label" ng-style="{'width': time_label.width * event_width_per_hour - 6}" ng-bind="time_label.label"></span>
-    </div>
-</div>
-<div id="EPG" ng-style="{'width': length_in_hour * event_width_per_hour + 200 + 20}">
-    <div id="services">
-        <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{continued_up: service.continued_up, continued_down: service.continued_down}">
-            <span ng-bind="service.name" class="name"></span>
+<div id="EPG">
+    <div id="labels" ng-style="{'width': length_in_hour * event_width_per_hour + 200 + 20}">
+        <span id="now_date" ng-bind="EPG.now_date"></span>
+        <div id="hours">
+            <span ng-repeat="time_label in EPG.time_labels" class="label" ng-style="{'width': time_label.width * event_width_per_hour - 6}" ng-bind="time_label.label"></span>
         </div>
     </div>
-    <div id="events" ng-style="{'width': length_in_hour * event_width_per_hour}">
-        <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{highlight: service.highlight}">
-            <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * event_width_per_hour - 9, 'left': event.hour_from_EPG_start * event_width_per_hour}" ng-show="event.show" ng-class="{highlight: event.highlight, continued_left: event.continued_left, continued_right: event.continued_right, continued_both: event.continued_both}">
-                <span class="name" ng-bind="event.name">
-                </span>
+    <div id="contents" ng-style="{'width': length_in_hour * event_width_per_hour + 200 + 20}">
+        <div id="services">
+            <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{continued_up: service.continued_up, continued_down: service.continued_down}">
+                <span ng-bind="service.name" class="name"></span>
             </div>
         </div>
+        <div id="events" ng-style="{'width': length_in_hour * event_width_per_hour}">
+            <div class="service" ng-repeat="service in EPG.services" ng-show="service.show" ng-class="{highlight: service.highlight}">
+                <div class="event" ng-repeat="event in service.events" ng-style="{'width': event.width * event_width_per_hour - 9, 'left': event.hour_from_EPG_start * event_width_per_hour}" ng-show="event.show" ng-class="{highlight: event.highlight, continued_left: event.continued_left, continued_right: event.continued_right, continued_both: event.continued_both}">
+                    <span class="name" ng-bind="event.name">
+                    </span>
+                </div>
+            </div>
+        </div>
+        <description-popup ng-show="show">
+        </description-popup>
     </div>
-    <description-popup ng-show="show">
-    </description-popup>
 </div>
