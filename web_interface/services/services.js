@@ -58,6 +58,24 @@ services.factory('EPG', function () {
 
             this.start_date = new Date(EPG_data.start_date);
             this.end_date = new Date(EPG_data.end_date);
+        },
+        get_start_date: function () {
+            return this.start_date;
+        },
+        get_end_date: function () {
+            return this.start_date;
+        },
+        get_service_number: function () {
+            return this.services.length;
+        },
+        get_service: function (service_index) {
+            return this.services[service_index];
+        },
+        get_event_number: function (service_index) {
+            return this.services[service_index].events.length;
+        },
+        get_event: function (service_index, event_index) {
+            return this.services[service_index].events[event_index];
         }
     };
 });
@@ -98,7 +116,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     this.cursor.event_index = 0;
                 }
 
-                var previous_event = this.EPG.services[this.cursor.service_index].events[this.cursor.event_index];
+                var previous_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
                 if (previous_event.start_date.getTime() < this.start_date.getTime() && previous_event.end_date.getTime() <= this.start_date.getTime()) {
                     this.start_date = new Date(previous_event.start_date);
                     this.start_date.setMinutes(0);
@@ -106,8 +124,8 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     this.end_date = new Date(this.start_date);
                     this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
                 }
-                if (this.start_date.getTime() < this.EPG.start_date.getTime()) {
-                    this.start_date = new Date(this.EPG.start_date);
+                if (this.start_date.getTime() < this.EPG.get_start_date().getTime()) {
+                    this.start_date = new Date(this.EPG.get_start_date());
                     this.start_date.setMinutes(0);
 
                     this.end_date = new Date(this.start_date);
@@ -124,11 +142,11 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
             } else {
                 this.cursor.event_index++;
-                if (this.cursor.event_index === this.EPG.services[this.cursor.service_index].events.length) {
-                    this.cursor.event_index = this.EPG.services[this.cursor.service_index].events.length - 1;
+                if (this.cursor.event_index === this.EPG.get_event_number(this.cursor.service_index)) {
+                    this.cursor.event_index = this.EPG.get_event_number(this.cursor.service_index) - 1;
                 }
 
-                focused_event = this.EPG.services[this.cursor.service_index].events[this.cursor.event_index];
+                focused_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
                 if (focused_event.start_date.getTime() >= this.end_date.getTime()) {
                     this.start_date = new Date(focused_event.start_date);
                     this.start_date.setMinutes(0);
@@ -147,7 +165,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     break;
                 }
 
-                var previous_service = this.EPG.services[this.cursor.service_index - 1];
+                var previous_service = this.EPG.get_service(this.cursor.service_index - 1);
                 var fastest_start_covered_event_time = Number.MAX_VALUE;
                 var fastest_start_covered_event_index = -1;
                 var fastest_start_event_time = Number.MAX_VALUE;
@@ -203,7 +221,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 }
             }
 
-            var previous_event = this.EPG.services[this.cursor.service_index].events[this.cursor.event_index];
+            var previous_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
             if (previous_event.start_date.getTime() < this.start_date.getTime() && previous_event.end_date.getTime() < this.start_date.getTime()) {
                 this.start_date = new Date(previous_event.start_date);
                 this.start_date.setMinutes(0);
@@ -231,11 +249,11 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
             var focused_event_end_time = focused_event.end_date.getTime() > this.end_date.getTime() ? this.end_date.getTime() : focused_event.end_date.getTime();
 
             while (true) {
-                if (this.cursor.service_index === this.EPG.services.length - 1) {
+                if (this.cursor.service_index === this.EPG.get_service_number() - 1) {
                     break;
                 }
 
-                var previous_service = this.EPG.services[this.cursor.service_index + 1];
+                var previous_service = this.EPG.get_service(this.cursor.service_index + 1);
                 var fastest_start_covered_event_time = Number.MAX_VALUE;
                 var fastest_start_covered_event_index = -1;
                 var fastest_start_event_time = Number.MAX_VALUE;
@@ -291,7 +309,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 }
             }
 
-            next_event = this.EPG.services[this.cursor.service_index].events[this.cursor.event_index];
+            next_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
             if (next_event.start_date.getTime() < this.start_date.getTime() && next_event.end_date.getTime() < this.start_date.getTime()) {
                 this.start_date = new Date(next_event.start_date);
                 this.start_date.setMinutes(0);
@@ -310,13 +328,13 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
             if (this.cursor.service_index >= this.first_service_index + this.MAX_SERVICES) {
                 this.first_service_index = this.cursor.service_index;
             }
-            if (this.first_service_index === this.EPG.services.length - this.MAX_SERVICES + 1) {
-                this.first_service_index = this.EPG.services.length - this.MAX_SERVICES;
+            if (this.first_service_index === this.EPG.get_service_number() - this.MAX_SERVICES + 1) {
+                this.first_service_index = this.EPG.get_service_number() - this.MAX_SERVICES;
             }
         },
         _update: function () {
-            for (var i=0; i<this.EPG.services.length; ++i) {
-                var service = this.EPG.services[i];
+            for (var i=0; i<this.EPG.get_service_number(); ++i) {
+                var service = this.EPG.get_service(i);
 
                 service.show = false;
                 service.highlight = false;
@@ -326,7 +344,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 var is_first_service_on_page = (i === this.first_service_index);
                 var is_first_service = (i === 0);
                 var is_last_service_on_page = (i === this.first_service_index + this.MAX_SERVICES - 1);
-                var is_last_service = (i === this.EPG.services.length - 1);
+                var is_last_service = (i === this.EPG.get_service_number() - 1);
 
                 if ((i >= this.first_service_index) && (i < this.first_service_index + this.MAX_SERVICES)) {
                     service.show = true;
@@ -343,8 +361,8 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     service.continued_down = true;
                 }
 
-                for (var j=0; j<this.EPG.services[i].events.length; ++j) {
-                    var event = this.EPG.services[i].events[j];
+                for (var j=0; j<this.EPG.get_event_number(i); ++j) {
+                    var event = this.EPG.get_event(i, j);
                     var event_start_date = new Date(event.start_date);
                     var event_end_date = new Date(event.end_date);
 
@@ -393,8 +411,8 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
         init: function (EPG_data) {
             this.EPG.generate_EPG(EPG_data);
 
-            this.start_date = new Date(this.EPG.start_date);
-            this.end_date = new Date(this.EPG.start_date);
+            this.start_date = new Date(this.EPG.get_start_date());
+            this.end_date = new Date(this.EPG.get_start_date());
             this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
             this.first_service_index = 0;
 
@@ -407,7 +425,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
             this._update();
         },
         navigate: function (direction) {
-            var focused_event = this.EPG.services[this.cursor.service_index].events[this.cursor.event_index];
+            var focused_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
 
             switch (direction) {
                 case this.DIRECTION.UP:
@@ -430,7 +448,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
             return this.EPG;
         },
         get_description: function () {
-            var focused_event = this.EPG.services[this.cursor.service_index].events[this.cursor.event_index];
+            var focused_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
 
             return {
                 name: focused_event.name,
