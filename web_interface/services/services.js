@@ -25,11 +25,11 @@ services.factory('EPG', function () {
          * start와 end 사이에 방송되는 event들을 모두 구한다.
          */
         generate_EPG : function (EPG_data) {
-            for (var i=0; i<EPG_data.services.length; ++i) {
+            for (var i=0; i<EPG_data.services.length; i+=1) {
                 var service = {};
                 var events = [];
 
-                for (var j=0; j<EPG_data.services[i].events.length; ++j) {
+                for (var j=0; j<EPG_data.services[i].events.length; j+=1) {
                     var event = EPG_data.services[i].events[j];
                     var event_start_date = new Date(event.time.start_date);
                     var event_end_date = new Date(event.time.end_date);
@@ -141,7 +141,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 this.end_date = new Date(this.start_date);
                 this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
             } else {
-                this.cursor.event_index++;
+                this.cursor.event_index += 1;
                 if (this.cursor.event_index === this.EPG.get_event_number(this.cursor.service_index)) {
                     this.cursor.event_index = this.EPG.get_event_number(this.cursor.service_index) - 1;
                 }
@@ -173,7 +173,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 var cover_event_index = -1;
 
                 var event_index = 0;
-                for (; event_index<previous_service.events.length; ++event_index) {
+                for (; event_index<previous_service.events.length; event_index+=1) {
                     var event_candidate = previous_service.events[event_index];
                     var event_candidate_start_time = event_candidate.start_date.getTime() > this.start_date.getTime() ? event_candidate.start_date.getTime() : this.start_date.getTime();
                     var event_candidate_end_time = event_candidate.end_date.getTime();
@@ -261,7 +261,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 var cover_event_index = -1;
 
                 var event_index = 0;
-                for (; event_index<previous_service.events.length; ++event_index) {
+                for (; event_index<previous_service.events.length; event_index+=1) {
                     var event_candidate = previous_service.events[event_index];
                     var event_candidate_start_time = event_candidate.start_date.getTime() > this.start_date.getTime() ? event_candidate.start_date.getTime() : this.start_date.getTime();
                     var event_candidate_end_time = event_candidate.end_date.getTime() > this.end_date.getTime() ? this.end_date.getTime() : event_candidate.end_date.getTime();
@@ -293,7 +293,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     }
                 }
 
-                this.cursor.service_index++;
+                this.cursor.service_index += 1;
                 if (fastest_start_covered_event_index !== -1) {
                     this.cursor.event_index = fastest_start_covered_event_index;
 
@@ -333,7 +333,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
             }
         },
         _update: function () {
-            for (var i=0; i<this.EPG.get_service_number(); ++i) {
+            for (var i=0; i<this.EPG.get_service_number(); i+=1) {
                 var service = this.EPG.get_service(i);
 
                 service.show = false;
@@ -361,7 +361,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     service.continued_down = true;
                 }
 
-                for (var j=0; j<this.EPG.get_event_number(i); ++j) {
+                for (var j=0; j<this.EPG.get_event_number(i); j+=1) {
                     var event = this.EPG.get_event(i, j);
                     var event_start_date = new Date(event.start_date);
                     var event_end_date = new Date(event.end_date);
