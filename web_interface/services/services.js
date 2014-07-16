@@ -111,7 +111,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 this.end_date = new Date(this.start_date);
                 this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
             } else {
-                this.cursor.event_index--;
+                this.cursor.event_index -= 1;
                 if (this.cursor.event_index < 0) {
                     this.cursor.event_index = 0;
                 }
@@ -205,7 +205,7 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     }
                 }
 
-                this.cursor.service_index--;
+                this.cursor.service_index -= 1;
                 if (fastest_start_covered_event_index !== -1) {
                     this.cursor.event_index = fastest_start_covered_event_index;
 
