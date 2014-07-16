@@ -71,6 +71,9 @@ directives.directive('navigator', ['Navigator', function (navigator) {
             scope.$on('NavigatorInit', function () {
                 scope.is_EPG_loaded = true;
             });
+            scope.$on('NavigatorUninit', function () {
+                scope.is_EPG_loaded = false;
+            });
 
             document.addEventListener('keydown', function (event) {
                 var key_code = event.keyCode;

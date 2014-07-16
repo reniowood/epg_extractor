@@ -20,9 +20,11 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
     });
 }]);
 
-app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource',
-    function ($scope, $location, EPGResource, EPG) {
+app.controller('LoadTSFileCtrl', ['$scope', '$location', 'EPGResource', 'Navigator',
+    function ($scope, $location, EPGResource, navigator) {
         $scope.TSFileName = '';
+
+        navigator.uninit_navigator();
 
         $scope.loadTSFile = function () {
             $location.path('/showEPG/' + $scope.TSFileName);

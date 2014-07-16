@@ -486,6 +486,10 @@ services.factory('Navigator', ['$rootScope', function ($rootScope) {
     navigator_service.init_navigator = function () {
         $rootScope.$broadcast('NavigatorInit');
     };
+    navigator_service.uninit_navigator = function () {
+        $rootScope.$broadcast('NavigatorUninit');
+    };
+
 
     return navigator_service;
 }]);
