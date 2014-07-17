@@ -25,6 +25,8 @@ services.factory('EPG', function () {
          * start와 end 사이에 방송되는 event들을 모두 구한다.
          */
         generate_EPG : function (EPG_data) {
+            var self = this;
+
             for (var i=0; i<EPG_data.services.length; i+=1) {
                 var service = {};
                 var events = [];
@@ -53,11 +55,11 @@ services.factory('EPG', function () {
                 service.show = true;
                 service.events = events;
 
-                this.services.push(service);
+                self.services.push(service);
             }
 
-            this.start_date = new Date(EPG_data.start_date);
-            this.end_date = new Date(EPG_data.end_date);
+            self.start_date = new Date(EPG_data.start_date);
+            self.end_date = new Date(EPG_data.end_date);
         },
         get_start_date: function () {
             return this.start_date;
@@ -101,71 +103,77 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
          * private functions
          */
         _go_previous_event: function (focused_event) {
-            if (focused_event.start_date.getTime() < this.start_date.getTime()) {
-                this.start_date.setHours(this.start_date.getHours() - this.LENGTH_IN_HOUR);
-                if (focused_event.start_date.getTime() >= this.start_date.getTime()) {
-                    this.start_date = new Date(focused_event.start_date);
-                }
-                this.start_date.setMinutes(0);
+            var self = this;
 
-                this.end_date = new Date(this.start_date);
-                this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+            if (focused_event.start_date.getTime() < self.start_date.getTime()) {
+                self.start_date.setHours(self.start_date.getHours() - self.LENGTH_IN_HOUR);
+                if (focused_event.start_date.getTime() >= self.start_date.getTime()) {
+                    self.start_date = new Date(focused_event.start_date);
+                }
+                self.start_date.setMinutes(0);
+
+                self.end_date = new Date(self.start_date);
+                self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
             } else {
-                this.cursor.event_index -= 1;
-                if (this.cursor.event_index < 0) {
-                    this.cursor.event_index = 0;
+                self.cursor.event_index -= 1;
+                if (self.cursor.event_index < 0) {
+                    self.cursor.event_index = 0;
                 }
 
-                var previous_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
-                if (previous_event.start_date.getTime() < this.start_date.getTime() && previous_event.end_date.getTime() <= this.start_date.getTime()) {
-                    this.start_date = new Date(previous_event.start_date);
-                    this.start_date.setMinutes(0);
+                var previous_event = self.EPG.get_event(self.cursor.service_index, self.cursor.event_index);
+                if (previous_event.start_date.getTime() < self.start_date.getTime() && previous_event.end_date.getTime() <= self.start_date.getTime()) {
+                    self.start_date = new Date(previous_event.start_date);
+                    self.start_date.setMinutes(0);
 
-                    this.end_date = new Date(this.start_date);
-                    this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                    self.end_date = new Date(self.start_date);
+                    self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
                 }
-                if (this.start_date.getTime() < this.EPG.get_start_date().getTime()) {
-                    this.start_date = new Date(this.EPG.get_start_date());
-                    this.start_date.setMinutes(0);
+                if (self.start_date.getTime() < self.EPG.get_start_date().getTime()) {
+                    self.start_date = new Date(self.EPG.get_start_date());
+                    self.start_date.setMinutes(0);
 
-                    this.end_date = new Date(this.start_date);
-                    this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                    self.end_date = new Date(self.start_date);
+                    self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
                 }
             }
         },
         _go_next_event: function (focused_event) {
-            if (focused_event.end_date.getTime() > this.end_date.getTime()) {
-                this.start_date = new Date(this.end_date);
-                this.start_date.setMinutes(0);
+            var self = this;
 
-                this.end_date = new Date(this.start_date);
-                this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+            if (focused_event.end_date.getTime() > self.end_date.getTime()) {
+                self.start_date = new Date(self.end_date);
+                self.start_date.setMinutes(0);
+
+                self.end_date = new Date(self.start_date);
+                self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
             } else {
-                this.cursor.event_index += 1;
-                if (this.cursor.event_index === this.EPG.get_event_number(this.cursor.service_index)) {
-                    this.cursor.event_index = this.EPG.get_event_number(this.cursor.service_index) - 1;
+                self.cursor.event_index += 1;
+                if (self.cursor.event_index === self.EPG.get_event_number(self.cursor.service_index)) {
+                    self.cursor.event_index = self.EPG.get_event_number(self.cursor.service_index) - 1;
                 }
 
-                focused_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
-                if (focused_event.start_date.getTime() >= this.end_date.getTime()) {
-                    this.start_date = new Date(focused_event.start_date);
-                    this.start_date.setMinutes(0);
+                focused_event = self.EPG.get_event(self.cursor.service_index, self.cursor.event_index);
+                if (focused_event.start_date.getTime() >= self.end_date.getTime()) {
+                    self.start_date = new Date(focused_event.start_date);
+                    self.start_date.setMinutes(0);
 
-                    this.end_date = new Date(this.start_date);
-                    this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                    self.end_date = new Date(self.start_date);
+                    self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
                 }
             }
         },
         _go_previous_service: function (focused_event) {
-            var focused_event_start_time = focused_event.start_date.getTime() > this.start_date.getTime() ? focused_event.start_date.getTime() : this.start_date.getTime();
+            var self = this;
+
+            var focused_event_start_time = focused_event.start_date.getTime() > self.start_date.getTime() ? focused_event.start_date.getTime() : self.start_date.getTime();
             var focused_event_end_time = focused_event.end_date.getTime();
 
             while (true) {
-                if (this.cursor.service_index === 0) {
+                if (self.cursor.service_index === 0) {
                     break;
                 }
 
-                var previous_service = this.EPG.get_service(this.cursor.service_index - 1);
+                var previous_service = self.EPG.get_service(self.cursor.service_index - 1);
                 var fastest_start_covered_event_time = Number.MAX_VALUE;
                 var fastest_start_covered_event_index = -1;
                 var fastest_start_event_time = Number.MAX_VALUE;
@@ -175,10 +183,10 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 var event_index = 0;
                 for (; event_index<previous_service.events.length; event_index+=1) {
                     var event_candidate = previous_service.events[event_index];
-                    var event_candidate_start_time = event_candidate.start_date.getTime() > this.start_date.getTime() ? event_candidate.start_date.getTime() : this.start_date.getTime();
+                    var event_candidate_start_time = event_candidate.start_date.getTime() > self.start_date.getTime() ? event_candidate.start_date.getTime() : self.start_date.getTime();
                     var event_candidate_end_time = event_candidate.end_date.getTime();
 
-                    if (event_candidate_end_time <= this.start_date.getTime() || event_candidate_start_time >= this.end_date.getTime()) {
+                    if (event_candidate_end_time <= self.start_date.getTime() || event_candidate_start_time >= self.end_date.getTime()) {
                         continue;
                     }
 
@@ -205,55 +213,57 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     }
                 }
 
-                this.cursor.service_index -= 1;
+                self.cursor.service_index -= 1;
                 if (fastest_start_covered_event_index !== -1) {
-                    this.cursor.event_index = fastest_start_covered_event_index;
+                    self.cursor.event_index = fastest_start_covered_event_index;
 
                     break;
                 } else if (fastest_start_event_index !== -1) {
-                    this.cursor.event_index = fastest_start_event_index;
+                    self.cursor.event_index = fastest_start_event_index;
 
                     break;
                 } else if (cover_event_index !== -1) {
-                    this.cursor.event_index = cover_event_index;
+                    self.cursor.event_index = cover_event_index;
 
                     break;
                 }
             }
 
-            var previous_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
-            if (previous_event.start_date.getTime() < this.start_date.getTime() && previous_event.end_date.getTime() < this.start_date.getTime()) {
-                this.start_date = new Date(previous_event.start_date);
-                this.start_date.setMinutes(0);
+            var previous_event = self.EPG.get_event(self.cursor.service_index, self.cursor.event_index);
+            if (previous_event.start_date.getTime() < self.start_date.getTime() && previous_event.end_date.getTime() < self.start_date.getTime()) {
+                self.start_date = new Date(previous_event.start_date);
+                self.start_date.setMinutes(0);
 
-                this.end_date = new Date(this.start_date);
-                this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                self.end_date = new Date(self.start_date);
+                self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
             }
-            if (previous_event.start_date.getTime() >= this.end_date.getTime()) {
-                this.start_date = new Date(previous_event.start_date);
-                this.start_date.setMinutes(0);
+            if (previous_event.start_date.getTime() >= self.end_date.getTime()) {
+                self.start_date = new Date(previous_event.start_date);
+                self.start_date.setMinutes(0);
 
-                this.end_date = new Date(this.start_date);
-                this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                self.end_date = new Date(self.start_date);
+                self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
             }
 
-            if (this.cursor.service_index < this.first_service_index) {
-                this.first_service_index = this.cursor.service_index - this.MAX_SERVICES + 1;
+            if (self.cursor.service_index < self.first_service_index) {
+                self.first_service_index = self.cursor.service_index - self.MAX_SERVICES + 1;
             }
-            if (this.first_service_index < 0) {
-                this.first_service_index = 0;
+            if (self.first_service_index < 0) {
+                self.first_service_index = 0;
             }
         },
         _go_next_service: function (focused_event) {
-            var focused_event_start_time = focused_event.start_date.getTime() > this.start_date.getTime() ? focused_event.start_date.getTime() : this.start_date.getTime();
-            var focused_event_end_time = focused_event.end_date.getTime() > this.end_date.getTime() ? this.end_date.getTime() : focused_event.end_date.getTime();
+            var self = this;
+
+            var focused_event_start_time = focused_event.start_date.getTime() > self.start_date.getTime() ? focused_event.start_date.getTime() : self.start_date.getTime();
+            var focused_event_end_time = focused_event.end_date.getTime() > self.end_date.getTime() ? self.end_date.getTime() : focused_event.end_date.getTime();
 
             while (true) {
-                if (this.cursor.service_index === this.EPG.get_service_number() - 1) {
+                if (self.cursor.service_index === self.EPG.get_service_number() - 1) {
                     break;
                 }
 
-                var previous_service = this.EPG.get_service(this.cursor.service_index + 1);
+                var previous_service = self.EPG.get_service(self.cursor.service_index + 1);
                 var fastest_start_covered_event_time = Number.MAX_VALUE;
                 var fastest_start_covered_event_index = -1;
                 var fastest_start_event_time = Number.MAX_VALUE;
@@ -263,10 +273,10 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                 var event_index = 0;
                 for (; event_index<previous_service.events.length; event_index+=1) {
                     var event_candidate = previous_service.events[event_index];
-                    var event_candidate_start_time = event_candidate.start_date.getTime() > this.start_date.getTime() ? event_candidate.start_date.getTime() : this.start_date.getTime();
-                    var event_candidate_end_time = event_candidate.end_date.getTime() > this.end_date.getTime() ? this.end_date.getTime() : event_candidate.end_date.getTime();
+                    var event_candidate_start_time = event_candidate.start_date.getTime() > self.start_date.getTime() ? event_candidate.start_date.getTime() : self.start_date.getTime();
+                    var event_candidate_end_time = event_candidate.end_date.getTime() > self.end_date.getTime() ? self.end_date.getTime() : event_candidate.end_date.getTime();
 
-                    if (event_candidate_end_time <= this.start_date.getTime() || event_candidate_start_time >= this.end_date.getTime()) {
+                    if (event_candidate_end_time <= self.start_date.getTime() || event_candidate_start_time >= self.end_date.getTime()) {
                         continue;
                     }
 
@@ -293,64 +303,66 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     }
                 }
 
-                this.cursor.service_index += 1;
+                self.cursor.service_index += 1;
                 if (fastest_start_covered_event_index !== -1) {
-                    this.cursor.event_index = fastest_start_covered_event_index;
+                    self.cursor.event_index = fastest_start_covered_event_index;
 
                     break;
                 } else if (fastest_start_event_index !== -1) {
-                    this.cursor.event_index = fastest_start_event_index;
+                    self.cursor.event_index = fastest_start_event_index;
 
                     break;
                 } else if (cover_event_index !== -1) {
-                    this.cursor.event_index = cover_event_index;
+                    self.cursor.event_index = cover_event_index;
 
                     break;
                 }
             }
 
-            next_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
-            if (next_event.start_date.getTime() < this.start_date.getTime() && next_event.end_date.getTime() < this.start_date.getTime()) {
-                this.start_date = new Date(next_event.start_date);
-                this.start_date.setMinutes(0);
+            next_event = self.EPG.get_event(self.cursor.service_index, self.cursor.event_index);
+            if (next_event.start_date.getTime() < self.start_date.getTime() && next_event.end_date.getTime() < self.start_date.getTime()) {
+                self.start_date = new Date(next_event.start_date);
+                self.start_date.setMinutes(0);
 
-                this.end_date = new Date(this.start_date);
-                this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                self.end_date = new Date(self.start_date);
+                self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
             }
-            if (next_event.start_date.getTime() >= this.end_date.getTime()) {
-                this.start_date = new Date(next_event.start_date);
-                this.start_date.setMinutes(0);
+            if (next_event.start_date.getTime() >= self.end_date.getTime()) {
+                self.start_date = new Date(next_event.start_date);
+                self.start_date.setMinutes(0);
 
-                this.end_date = new Date(this.start_date);
-                this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
+                self.end_date = new Date(self.start_date);
+                self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
             }
 
-            if (this.cursor.service_index >= this.first_service_index + this.MAX_SERVICES) {
-                this.first_service_index = this.cursor.service_index;
+            if (self.cursor.service_index >= self.first_service_index + self.MAX_SERVICES) {
+                self.first_service_index = self.cursor.service_index;
             }
-            if (this.first_service_index === this.EPG.get_service_number() - this.MAX_SERVICES + 1) {
-                this.first_service_index = this.EPG.get_service_number() - this.MAX_SERVICES;
+            if (self.first_service_index === self.EPG.get_service_number() - self.MAX_SERVICES + 1) {
+                self.first_service_index = self.EPG.get_service_number() - self.MAX_SERVICES;
             }
         },
         _update: function () {
-            for (var i=0; i<this.EPG.get_service_number(); i+=1) {
-                var service = this.EPG.get_service(i);
+            var self = this;
+
+            for (var i=0; i<self.EPG.get_service_number(); i+=1) {
+                var service = self.EPG.get_service(i);
 
                 service.show = false;
                 service.highlight = false;
                 service.continued_up = false;
                 service.continued_down = false;
 
-                var is_first_service_on_page = (i === this.first_service_index);
+                var is_first_service_on_page = (i === self.first_service_index);
                 var is_first_service = (i === 0);
-                var is_last_service_on_page = (i === this.first_service_index + this.MAX_SERVICES - 1);
-                var is_last_service = (i === this.EPG.get_service_number() - 1);
+                var is_last_service_on_page = (i === self.first_service_index + self.MAX_SERVICES - 1);
+                var is_last_service = (i === self.EPG.get_service_number() - 1);
 
-                if ((i >= this.first_service_index) && (i < this.first_service_index + this.MAX_SERVICES)) {
+                if ((i >= self.first_service_index) && (i < self.first_service_index + self.MAX_SERVICES)) {
                     service.show = true;
                 }
 
-                if (i === this.cursor.service_index) {
+                if (i === self.cursor.service_index) {
                     service.highlight = true;
                 }
 
@@ -361,13 +373,13 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     service.continued_down = true;
                 }
 
-                for (var j=0; j<this.EPG.get_event_number(i); j+=1) {
-                    var event = this.EPG.get_event(i, j);
+                for (var j=0; j<self.EPG.get_event_number(i); j+=1) {
+                    var event = self.EPG.get_event(i, j);
                     var event_start_date = new Date(event.start_date);
                     var event_end_date = new Date(event.end_date);
 
-                    var is_event_before_EPG = (event_end_date.getTime() <= this.start_date.getTime());
-                    var is_event_after_EPG = (event_start_date.getTime() >= this.end_date.getTime());
+                    var is_event_before_EPG = (event_end_date.getTime() <= self.start_date.getTime());
+                    var is_event_after_EPG = (event_start_date.getTime() >= self.end_date.getTime());
 
                     event.show = false;
                     event.highlight = false;
@@ -378,22 +390,22 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
                     if (!is_event_before_EPG && !is_event_after_EPG) {
                         event.show = true;
 
-                        if (this.cursor.service_index === i && this.cursor.event_index === j) {
+                        if (self.cursor.service_index === i && self.cursor.event_index === j) {
                             event.highlight = true;
                         }
 
-                        event.hour_from_EPG_start = (event.start_date.getTime() - this.start_date.getTime()) / (1000 * 60 * 60);
-                        if (event.start_date.getTime() < this.start_date.getTime()) {
+                        event.hour_from_EPG_start = (event.start_date.getTime() - self.start_date.getTime()) / (1000 * 60 * 60);
+                        if (event.start_date.getTime() < self.start_date.getTime()) {
                             event.hour_from_EPG_start = 0;
                         }
 
                         event.width = event.duration;
-                        if (event.start_date.getTime() < this.start_date.getTime()) {
-                            event.width -= (this.start_date.getTime() - event.start_date.getTime()) / (1000 * 60 * 60);
+                        if (event.start_date.getTime() < self.start_date.getTime()) {
+                            event.width -= (self.start_date.getTime() - event.start_date.getTime()) / (1000 * 60 * 60);
                             event.continued_left = true;
                         }
-                        if (event.end_date.getTime() > this.end_date.getTime()) {
-                            event.width -= (event.end_date.getTime() - this.end_date.getTime()) / (1000 * 60 * 60);
+                        if (event.end_date.getTime() > self.end_date.getTime()) {
+                            event.width -= (event.end_date.getTime() - self.end_date.getTime()) / (1000 * 60 * 60);
                             event.continued_right = true;
                         }
                         if (event.continued_left && event.continued_right) {
@@ -409,40 +421,44 @@ services.factory('ProgramGuide', ['EPG', function (EPG) {
          * API
          */
         init: function (EPG_data) {
-            this.EPG.generate_EPG(EPG_data);
+            var self = this;
 
-            this.start_date = new Date(this.EPG.get_start_date());
-            this.end_date = new Date(this.EPG.get_start_date());
-            this.end_date.setHours(this.end_date.getHours() + this.LENGTH_IN_HOUR);
-            this.first_service_index = 0;
+            self.EPG.generate_EPG(EPG_data);
 
-            this.cursor = {
+            self.start_date = new Date(self.EPG.get_start_date());
+            self.end_date = new Date(self.EPG.get_start_date());
+            self.end_date.setHours(self.end_date.getHours() + self.LENGTH_IN_HOUR);
+            self.first_service_index = 0;
+
+            self.cursor = {
                 service_index: 0,
                 event_index: 0
             };
 
 
-            this._update();
+            self._update();
         },
         navigate: function (direction) {
-            var focused_event = this.EPG.get_event(this.cursor.service_index, this.cursor.event_index);
+            var self = this;
+
+            var focused_event = self.EPG.get_event(self.cursor.service_index, self.cursor.event_index);
 
             switch (direction) {
-                case this.DIRECTION.UP:
-                    this._go_previous_service(focused_event);
+                case self.DIRECTION.UP:
+                    self._go_previous_service(focused_event);
                     break;
-                case this.DIRECTION.DOWN:
-                    this._go_next_service(focused_event);
+                case self.DIRECTION.DOWN:
+                    self._go_next_service(focused_event);
                     break;
-                case this.DIRECTION.LEFT:
-                    this._go_previous_event(focused_event);
+                case self.DIRECTION.LEFT:
+                    self._go_previous_event(focused_event);
                     break;
-                case this.DIRECTION.RIGHT:
-                    this._go_next_event(focused_event);
+                case self.DIRECTION.RIGHT:
+                    self._go_next_event(focused_event);
                     break;
             }
 
-            this._update();
+            self._update();
         },
         get_EPG: function () {
             return this.EPG;
